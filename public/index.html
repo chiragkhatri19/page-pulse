@@ -1,0 +1,591 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Page Pulse — URL audit API</title>
+    <meta
+      name="description"
+      content="Page Pulse audits any public URL for SEO, accessibility, performance and security signals, and returns a scored JSON report."
+    />
+    <link rel="canonical" href="https://page-pulse.onrender.com/" />
+    <meta property="og:title" content="Page Pulse — URL audit API" />
+    <meta property="og:description" content="Audit any public URL. Scored JSON in one request." />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>%E2%9D%A4</text></svg>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --paper: #eef2ea;
+        --grid: #cddac9;
+        --grid-major: #b6c9b2;
+        --ink: #14201a;
+        --ink-soft: #4a5b50;
+        --pen: #d63426;
+        --trace: #0e6b56;
+        --amber: #b07a04;
+        --rule: 1px solid var(--grid-major);
+        --display: "Instrument Serif", Georgia, serif;
+        --sans: "IBM Plex Sans", system-ui, sans-serif;
+        --mono: "IBM Plex Mono", ui-monospace, monospace;
+      }
+
+      * { box-sizing: border-box; }
+
+      html { -webkit-text-size-adjust: 100%; }
+
+      body {
+        margin: 0;
+        color: var(--ink);
+        font-family: var(--sans);
+        font-size: 16px;
+        line-height: 1.55;
+        background-color: var(--paper);
+        /* Chart-recorder paper: fine ruling with a heavier line every 5th. */
+        background-image:
+          linear-gradient(var(--grid) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid) 1px, transparent 1px),
+          linear-gradient(var(--grid-major) 1px, transparent 1px),
+          linear-gradient(90deg, var(--grid-major) 1px, transparent 1px);
+        background-size: 16px 16px, 16px 16px, 80px 80px, 80px 80px;
+      }
+
+      a { color: var(--pen); text-underline-offset: 3px; }
+      a:focus-visible,
+      button:focus-visible,
+      input:focus-visible {
+        outline: 2px solid var(--pen);
+        outline-offset: 2px;
+      }
+
+      .wrap { max-width: 940px; margin: 0 auto; padding: 0 24px; }
+
+      header.masthead {
+        border-bottom: var(--rule);
+        background: rgba(238, 242, 234, 0.86);
+        backdrop-filter: blur(2px);
+      }
+      .masthead .wrap {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 16px;
+        padding-top: 14px;
+        padding-bottom: 14px;
+      }
+      .wordmark {
+        font-family: var(--display);
+        font-size: 26px;
+        letter-spacing: 0.01em;
+      }
+      .wordmark em { font-style: italic; color: var(--pen); }
+      .masthead nav {
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        display: flex;
+        gap: 18px;
+      }
+      .masthead nav a { color: var(--ink-soft); text-decoration: none; }
+      .masthead nav a:hover { color: var(--pen); }
+
+      /* ---- Hero: the trace is the thesis ---- */
+      .hero { padding: 56px 0 40px; border-bottom: var(--rule); }
+      .eyebrow {
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+        margin: 0 0 18px;
+      }
+      h1 {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: clamp(40px, 7vw, 76px);
+        line-height: 1.02;
+        margin: 0 0 20px;
+        max-width: 16ch;
+      }
+      h1 em { font-style: italic; color: var(--pen); }
+      .lede {
+        max-width: 58ch;
+        font-size: 18px;
+        color: var(--ink-soft);
+        margin: 0 0 28px;
+      }
+
+      .trace-panel {
+        border: 1px solid var(--ink);
+        background: #f7faf5;
+        padding: 0;
+        margin: 0 0 32px;
+      }
+      .trace-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 12px;
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+        padding: 8px 12px;
+        border-bottom: 1px dashed var(--grid-major);
+      }
+      #trace { display: block; width: 100%; height: 120px; }
+      #trace path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
+      .trace-line {
+        stroke: var(--pen);
+        stroke-width: 2;
+        stroke-dasharray: 2600;
+        stroke-dashoffset: 2600;
+        animation: draw 2.4s cubic-bezier(0.35, 0.1, 0.2, 1) forwards;
+      }
+      @keyframes draw { to { stroke-dashoffset: 0; } }
+      @media (prefers-reduced-motion: reduce) {
+        .trace-line { animation: none; stroke-dashoffset: 0; }
+      }
+
+      /* ---- Console ---- */
+      .console { padding: 44px 0; border-bottom: var(--rule); }
+      h2 {
+        font-family: var(--display);
+        font-weight: 400;
+        font-size: 34px;
+        margin: 0 0 6px;
+      }
+      .section-note { color: var(--ink-soft); margin: 0 0 22px; max-width: 60ch; }
+
+      .field { display: flex; gap: 10px; flex-wrap: wrap; }
+      input[type="url"] {
+        flex: 1 1 320px;
+        min-width: 0;
+        font-family: var(--mono);
+        font-size: 15px;
+        padding: 13px 14px;
+        border: 1px solid var(--ink);
+        background: #fbfdfa;
+        color: var(--ink);
+        border-radius: 0;
+      }
+      button {
+        font-family: var(--mono);
+        font-size: 13px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding: 13px 22px;
+        border: 1px solid var(--ink);
+        background: var(--ink);
+        color: var(--paper);
+        cursor: pointer;
+        border-radius: 0;
+      }
+      button:hover:not(:disabled) { background: var(--pen); border-color: var(--pen); }
+      button:disabled { opacity: 0.45; cursor: progress; }
+      .samples {
+        font-family: var(--mono);
+        font-size: 12px;
+        color: var(--ink-soft);
+        margin-top: 12px;
+      }
+      .samples button {
+        background: none;
+        color: var(--ink-soft);
+        border: none;
+        border-bottom: 1px dotted var(--ink-soft);
+        padding: 0 0 1px;
+        margin-left: 8px;
+        text-transform: none;
+        letter-spacing: 0;
+        font-size: 12px;
+      }
+      .samples button:hover { color: var(--pen); background: none; }
+
+      #status {
+        font-family: var(--mono);
+        font-size: 13px;
+        margin-top: 18px;
+        min-height: 20px;
+      }
+      #status[data-tone="error"] { color: var(--pen); }
+      #status[data-tone="ok"] { color: var(--trace); }
+
+      #result { margin-top: 26px; display: none; }
+      #result[data-visible="true"] { display: block; }
+
+      .verdict {
+        display: flex;
+        align-items: flex-end;
+        gap: 20px;
+        border-top: 2px solid var(--ink);
+        border-bottom: 1px solid var(--ink);
+        padding: 14px 0;
+        flex-wrap: wrap;
+      }
+      .verdict .score {
+        font-family: var(--display);
+        font-size: 64px;
+        line-height: 0.9;
+      }
+      .verdict .meta { font-family: var(--mono); font-size: 12px; color: var(--ink-soft); }
+      .verdict .meta strong { color: var(--ink); font-weight: 500; }
+
+      .pillars {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+        gap: 0;
+        border-bottom: 1px solid var(--ink);
+      }
+      .pillar { padding: 14px 16px 16px; border-right: 1px dashed var(--grid-major); }
+      .pillar:last-child { border-right: none; }
+      .pillar dt {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--ink-soft);
+      }
+      .pillar dd { margin: 4px 0 8px; font-family: var(--display); font-size: 30px; }
+      .bar { height: 4px; background: var(--grid); }
+      .bar span { display: block; height: 100%; background: var(--trace); }
+      .bar span[data-low="true"] { background: var(--pen); }
+
+      ol.fixes { list-style: none; margin: 22px 0 0; padding: 0; }
+      ol.fixes li {
+        display: grid;
+        grid-template-columns: 84px 1fr;
+        gap: 14px;
+        padding: 12px 0;
+        border-bottom: 1px dashed var(--grid-major);
+      }
+      .impact {
+        font-family: var(--mono);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        padding-top: 4px;
+      }
+      .impact[data-impact="high"] { color: var(--pen); }
+      .impact[data-impact="medium"] { color: var(--amber); }
+      .impact[data-impact="low"] { color: var(--ink-soft); }
+      .fix-title { font-weight: 600; }
+      .fix-detail { color: var(--ink-soft); font-size: 14px; }
+
+      /* ---- API contract ---- */
+      .api { padding: 44px 0; border-bottom: var(--rule); }
+      pre {
+        font-family: var(--mono);
+        font-size: 13px;
+        line-height: 1.6;
+        background: var(--ink);
+        color: #dfeadb;
+        padding: 18px;
+        overflow-x: auto;
+        margin: 0 0 18px;
+      }
+      pre .c { color: #8fae95; }
+      table { width: 100%; border-collapse: collapse; font-size: 14px; }
+      th, td { text-align: left; padding: 9px 10px 9px 0; border-bottom: 1px dashed var(--grid-major); vertical-align: top; }
+      th { font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); font-weight: 500; }
+      td code { font-family: var(--mono); font-size: 13px; color: var(--pen); }
+
+      footer { padding: 30px 0 44px; font-size: 14px; color: var(--ink-soft); }
+      footer .credit { font-family: var(--mono); font-size: 12px; letter-spacing: 0.04em; }
+
+      @media (max-width: 640px) {
+        .masthead nav { display: none; }
+        ol.fixes li { grid-template-columns: 1fr; gap: 4px; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="masthead">
+      <div class="wrap">
+        <div class="wordmark">Page <em>Pulse</em></div>
+        <nav>
+          <a href="#console">Run an audit</a>
+          <a href="#api">API</a>
+          <a href="https://github.com/chiragkhatri19/page-pulse">Source</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="wrap">
+          <p class="eyebrow">URL audit service · v1</p>
+          <h1>Take the <em>vitals</em> of any public page.</h1>
+          <p class="lede">
+            One request in, one scored report out. Page Pulse fetches a URL under strict timeouts,
+            reads its markup and response headers, and grades it across SEO, accessibility,
+            performance and security. Repeat audits inside the cache window come back without
+            touching the origin.
+          </p>
+
+          <figure class="trace-panel">
+            <figcaption class="trace-head">
+              <span>Trace · live audit output</span>
+              <span id="trace-label">idle</span>
+            </figcaption>
+            <svg id="trace" viewBox="0 0 1000 120" preserveAspectRatio="none" aria-hidden="true">
+              <path class="trace-line" id="trace-path" d="" />
+            </svg>
+          </figure>
+        </div>
+      </section>
+
+      <section class="console" id="console">
+        <div class="wrap">
+          <h2>Run an audit</h2>
+          <p class="section-note">
+            Enter any public http or https URL. Private and loopback addresses are rejected before a
+            socket opens.
+          </p>
+
+          <div class="field">
+            <label for="url" class="visually-hidden" hidden>URL to audit</label>
+            <input
+              id="url"
+              type="url"
+              placeholder="https://example.com"
+              autocomplete="url"
+              spellcheck="false"
+            />
+            <button id="run" type="button">Audit</button>
+          </div>
+          <p class="samples">
+            Try:
+            <button type="button" data-sample="https://example.com">example.com</button>
+            <button type="button" data-sample="https://developer.mozilla.org">developer.mozilla.org</button>
+            <button type="button" data-sample="https://news.ycombinator.com">news.ycombinator.com</button>
+          </p>
+
+          <p id="status" role="status" aria-live="polite"></p>
+
+          <div id="result" data-visible="false">
+            <div class="verdict">
+              <div class="score" id="overall">--</div>
+              <div class="meta" id="verdict-meta"></div>
+            </div>
+            <dl class="pillars" id="pillars"></dl>
+            <h3 style="font-family: var(--display); font-weight: 400; font-size: 24px; margin: 26px 0 0;">
+              What to fix first
+            </h3>
+            <ol class="fixes" id="fixes"></ol>
+          </div>
+        </div>
+      </section>
+
+      <section class="api" id="api">
+        <div class="wrap">
+          <h2>API contract</h2>
+          <p class="section-note">
+            Full reference in the repository README. Every response carries an
+            <code>x-request-id</code> header; quote it when reporting a problem.
+          </p>
+          <pre><span class="c"># Audit a URL</span>
+curl -X POST https://page-pulse.onrender.com/v1/audit \
+  -H 'content-type: application/json' \
+  -d '{"url":"https://example.com"}'
+
+<span class="c"># Same thing, GET, bypassing the cache</span>
+curl 'https://page-pulse.onrender.com/v1/audit?url=example.com&amp;fresh=true'</pre>
+          <table>
+            <thead>
+              <tr><th>Endpoint</th><th>Purpose</th></tr>
+            </thead>
+            <tbody>
+              <tr><td><code>POST /v1/audit</code></td><td>Audit a URL. Body: <code>url</code>, optional <code>fresh</code>, optional <code>ttlSeconds</code>.</td></tr>
+              <tr><td><code>GET /v1/audit</code></td><td>Same audit via query string, for links and browsers.</td></tr>
+              <tr><td><code>GET /v1/stats</code></td><td>Cache hit rate, in-flight audits, queue depth, tracked rate-limit clients.</td></tr>
+              <tr><td><code>GET /healthz</code></td><td>Liveness. Never rate limited.</td></tr>
+              <tr><td><code>GET /readyz</code></td><td>Readiness. Returns 503 once the work queue is saturated.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap">
+        <p class="credit">
+          Built for
+          <a href="https://digitalheroesco.com" rel="noopener">Digital Heroes Training Task</a>
+        </p>
+      </div>
+    </footer>
+
+    <script>
+      (function () {
+        var input = document.getElementById("url");
+        var runBtn = document.getElementById("run");
+        var status = document.getElementById("status");
+        var result = document.getElementById("result");
+        var tracePath = document.getElementById("trace-path");
+        var traceLabel = document.getElementById("trace-label");
+
+        var PILLAR_LABELS = {
+          seo: "SEO",
+          accessibility: "Accessibility",
+          performance: "Performance",
+          security: "Security",
+        };
+
+        /**
+         * The hero trace is not decoration: each check becomes one beat, and a
+         * failing check spikes the pen. An idle page draws a flat resting rhythm.
+         */
+        function drawTrace(checks) {
+          var beats = checks && checks.length ? checks : null;
+          var count = beats ? beats.length : 24;
+          var step = 1000 / count;
+          var mid = 60;
+          var d = "M0," + mid;
+          for (var i = 0; i < count; i++) {
+            var x = i * step;
+            var failed = beats ? !beats[i].passed : i % 7 === 3;
+            var weight = beats ? beats[i].weight : 4;
+            var amp = failed ? Math.min(46, 10 + weight * 4) : 6;
+            d +=
+              " L" + (x + step * 0.3).toFixed(1) + "," + mid +
+              " L" + (x + step * 0.45).toFixed(1) + "," + (mid - amp).toFixed(1) +
+              " L" + (x + step * 0.6).toFixed(1) + "," + (mid + amp * 0.42).toFixed(1) +
+              " L" + (x + step * 0.75).toFixed(1) + "," + mid;
+          }
+          d += " L1000," + mid;
+          tracePath.setAttribute("d", d);
+          tracePath.classList.remove("trace-line");
+          void tracePath.getBoundingClientRect();
+          tracePath.classList.add("trace-line");
+        }
+
+        function setStatus(message, tone) {
+          status.textContent = message;
+          if (tone) status.setAttribute("data-tone", tone);
+          else status.removeAttribute("data-tone");
+        }
+
+        function render(payload) {
+          var report = payload.report;
+          document.getElementById("overall").textContent = report.score.overall;
+
+          var cacheNote = payload.cache.hit
+            ? "cache HIT, " + payload.cache.ageSeconds + "s old"
+            : "cache MISS, fetched live";
+          document.getElementById("verdict-meta").innerHTML =
+            "<strong>Grade " + report.score.grade + "</strong> · " +
+            report.finalUrl + "<br />HTTP " + report.http.status + " · TTFB " +
+            report.http.ttfbMs + " ms · " + Math.round(report.http.bytes / 1024) + " KB · " +
+            cacheNote + " · " + payload.durationMs + " ms";
+
+          var pillars = document.getElementById("pillars");
+          pillars.innerHTML = "";
+          Object.keys(PILLAR_LABELS).forEach(function (key) {
+            var p = report.score.pillars[key];
+            var wrapper = document.createElement("div");
+            wrapper.className = "pillar";
+            wrapper.innerHTML =
+              "<dt>" + PILLAR_LABELS[key] + "</dt><dd>" + p.score + "</dd>" +
+              '<div class="bar"><span style="width:' + p.score + '%" data-low="' +
+              (p.score < 70) + '"></span></div>';
+            pillars.appendChild(wrapper);
+          });
+
+          var fixes = document.getElementById("fixes");
+          fixes.innerHTML = "";
+          var recs = report.score.recommendations.slice(0, 8);
+          if (recs.length === 0) {
+            fixes.innerHTML = '<li><span class="impact">clean</span><span>Every check passed.</span></li>';
+          }
+          recs.forEach(function (rec) {
+            var li = document.createElement("li");
+            var impact = document.createElement("span");
+            impact.className = "impact";
+            impact.setAttribute("data-impact", rec.impact);
+            impact.textContent = rec.impact;
+            var body = document.createElement("span");
+            var title = document.createElement("span");
+            title.className = "fix-title";
+            title.textContent = rec.title;
+            var detail = document.createElement("span");
+            detail.className = "fix-detail";
+            detail.textContent = " " + rec.detail;
+            body.appendChild(title);
+            body.appendChild(document.createElement("br"));
+            body.appendChild(detail);
+            li.appendChild(impact);
+            li.appendChild(body);
+            fixes.appendChild(li);
+          });
+
+          result.setAttribute("data-visible", "true");
+          drawTrace(report.checks);
+          traceLabel.textContent = report.finalUrl.replace(/^https?:\/\//, "");
+        }
+
+        async function audit() {
+          var value = input.value.trim();
+          if (!value) {
+            setStatus("Enter a URL first.", "error");
+            input.focus();
+            return;
+          }
+          runBtn.disabled = true;
+          setStatus("Fetching and grading " + value + " ...");
+          traceLabel.textContent = "reading";
+
+          try {
+            var res = await fetch("/v1/audit", {
+              method: "POST",
+              headers: { "content-type": "application/json" },
+              body: JSON.stringify({ url: value }),
+            });
+            var payload = await res.json();
+            if (!res.ok) {
+              setStatus(
+                payload.error.code + ": " + payload.error.message +
+                  " (request " + payload.error.requestId + ")",
+                "error"
+              );
+              traceLabel.textContent = "no signal";
+              return;
+            }
+            setStatus(
+              "Graded " + payload.report.score.overall + "/100 in " + payload.durationMs + " ms.",
+              "ok"
+            );
+            render(payload);
+          } catch (err) {
+            setStatus("Network error reaching the audit service. Try again.", "error");
+            traceLabel.textContent = "no signal";
+          } finally {
+            runBtn.disabled = false;
+          }
+        }
+
+        runBtn.addEventListener("click", audit);
+        input.addEventListener("keydown", function (e) {
+          if (e.key === "Enter") audit();
+        });
+        Array.prototype.forEach.call(
+          document.querySelectorAll("[data-sample]"),
+          function (btn) {
+            btn.addEventListener("click", function () {
+              input.value = btn.getAttribute("data-sample");
+              audit();
+            });
+          }
+        );
+
+        drawTrace(null);
+      })();
+    </script>
+  </body>
+</html>
