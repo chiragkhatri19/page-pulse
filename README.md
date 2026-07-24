@@ -2,7 +2,7 @@
 
 A URL audit service. Give it a public URL, it fetches the page under strict timeouts, reads the markup and the response headers, and returns a scored JSON report across four pillars: SEO, accessibility, performance and security.
 
-Live: **https://page-pulse.onrender.com**
+Live: **https://page-pulse-9riw.onrender.com**
 CI: ![CI](https://github.com/chiragkhatri19/page-pulse/actions/workflows/ci.yml/badge.svg)
 
 Built for the Digital Heroes training task. Architecture for the 10k audits/day scenario is in [ARCHITECTURE.md](./ARCHITECTURE.md).
@@ -42,7 +42,7 @@ docker run -p 3000:3000 -e LOG_LEVEL=info page-pulse
 
 ## API contract
 
-Base URL: `https://page-pulse.onrender.com`. All responses are `application/json`. Every response, success or failure, carries an `x-request-id` header.
+Base URL: `https://page-pulse-9riw.onrender.com`. All responses are `application/json`. Every response, success or failure, carries an `x-request-id` header.
 
 ### `POST /v1/audit`
 
@@ -57,7 +57,7 @@ Audit a URL.
 | `ttlSeconds` | integer | no | Override the cache window for this entry. Clamped to 4x the server ceiling, so a client cannot pin a stale entry indefinitely. |
 
 ```bash
-curl -X POST https://page-pulse.onrender.com/v1/audit \
+curl -X POST https://page-pulse-9riw.onrender.com/v1/audit \
   -H 'content-type: application/json' \
   -d '{"url":"https://example.com"}'
 ```
@@ -127,7 +127,7 @@ curl -X POST https://page-pulse.onrender.com/v1/audit \
 Identical, with `url`, `fresh` and `ttlSeconds` as query parameters. Useful for links and browser testing.
 
 ```bash
-curl 'https://page-pulse.onrender.com/v1/audit?url=example.com&fresh=true'
+curl 'https://page-pulse-9riw.onrender.com/v1/audit?url=example.com&fresh=true'
 ```
 
 ### `GET /healthz`

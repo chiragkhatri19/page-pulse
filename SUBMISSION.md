@@ -2,7 +2,7 @@
 
 Role: Software Development (SDE). Task A and Task B.
 
-- Live service: `https://<your-render-url>`
+- Live service: `https://page-pulse-9riw.onrender.com`
 - Repository: `https://github.com/chiragkhatri19/page-pulse`
 - Architecture document (Task B): [ARCHITECTURE.md](./ARCHITECTURE.md)
 - API contract: [README.md](./README.md)
@@ -73,7 +73,7 @@ Do not read this out. It is a running order so you do not ramble. Screen-share t
 - [x] Files reorganised into `src/lib` + `test`, `node_modules/`, `dist/`, `coverage/`, `.env*` confirmed gitignored
 - [x] `npm run typecheck` and `npm test` pass locally (137/137)
 - [ ] `git init`, commit, push to a **public** GitHub repo, confirm the CI badge is green
-- [ ] Deploy, then find-and-replace `page-pulse.onrender.com` in `README.md` and `public/index.html` with the real URL
+- [x] Deployed to Render (free plan) at `page-pulse-9riw.onrender.com`; find-and-replace done in `README.md` and `public/index.html`; verified live: `/healthz` 200, a real audit, `x-cache: HIT` on repeat, and `422 URL_NOT_ALLOWED` for `169.254.169.254`
 - [ ] Load the live site and confirm the footer credit renders and the link to digitalheroesco.com works
 - [ ] Record the Loom, set it to "anyone with the link"
 - [ ] Rewrite the AI paragraph so it is true for you
