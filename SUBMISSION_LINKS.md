@@ -6,7 +6,6 @@ Role: Software Development (SDE)
 
 - Live service: https://page-pulse-9riw.onrender.com
 - GitHub repository: https://github.com/chiragkhatri19/page-pulse
-- Loom walkthrough: paste final Loom link here after recording
 
 ## Supporting documents
 
