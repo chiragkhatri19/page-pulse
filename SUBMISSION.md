@@ -6,10 +6,13 @@ Role: Software Development (SDE). Task A and Task B.
 
 - Live service: `https://page-pulse-9riw.onrender.com`
 - Repository: `https://github.com/chiragkhatri19/page-pulse`
+- Evaluator guide: [EVALUATOR_GUIDE.md](./EVALUATOR_GUIDE.md)
 - API contract: [README.md](./README.md)
 - Architecture document: [ARCHITECTURE.md](./ARCHITECTURE.md)
 - OpenAPI contract: [openapi.yaml](./openapi.yaml)
 - Load-test evidence: [LOAD_TEST.md](./LOAD_TEST.md)
+- Verification proof: [PROOF.md](./PROOF.md)
+- Custom domain plan: [CUSTOM_DOMAIN.md](./CUSTOM_DOMAIN.md)
 
 ## What I built
 
@@ -93,6 +96,9 @@ Additional checks already performed:
 - [x] Architecture document covers Task B.
 - [x] OpenAPI contract exists.
 - [x] Load-test evidence exists.
+- [x] Evaluator guide exists.
+- [x] Live proof document exists.
+- [x] Custom domain plan exists for `scan.chiragships.site`.
 - [x] Required footer credit exists on the live page.
 - [x] Local typecheck passes.
 - [x] Local tests pass.

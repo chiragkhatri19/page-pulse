@@ -5,8 +5,9 @@ A production-minded URL audit service. Give it a public URL, it fetches the page
 Live: **https://page-pulse-9riw.onrender.com**
 CI: ![CI](https://github.com/chiragkhatri19/page-pulse/actions/workflows/ci.yml/badge.svg)
 
-Built for the Digital Heroes training task. Architecture for the 10k audits/day scenario is in [ARCHITECTURE.md](./ARCHITECTURE.md).
-OpenAPI contract: [openapi.yaml](./openapi.yaml). Load-test notes: [LOAD_TEST.md](./LOAD_TEST.md).
+Built for the Digital Heroes training task. Start with [EVALUATOR_GUIDE.md](./EVALUATOR_GUIDE.md) if you are reviewing the submission.
+
+Architecture for the 10k audits/day scenario is in [ARCHITECTURE.md](./ARCHITECTURE.md). OpenAPI contract: [openapi.yaml](./openapi.yaml). Load-test notes: [LOAD_TEST.md](./LOAD_TEST.md). Live proof: [PROOF.md](./PROOF.md). Custom domain plan: [CUSTOM_DOMAIN.md](./CUSTOM_DOMAIN.md).
 
 ---
 
@@ -175,6 +176,63 @@ Every error has the same shape. Branch on `error.code`, never on the message.
 | 500 | `INTERNAL` | A defect. The message asks the caller to quote the request ID. |
 
 Note the distinction that matters most here: a *target* returning 500 is a successful audit that scores badly (200 from us). A 5xx from Page Pulse means Page Pulse failed.
+
+### Failure examples
+
+SSRF guard rejecting a cloud metadata address:
+
+```bash
+curl -X POST https://page-pulse-9riw.onrender.com/v1/audit \
+  -H 'content-type: application/json' \
+  -d '{"url":"http://169.254.169.254/latest/meta-data/"}'
+```
+
+```json
+{
+  "error": {
+    "code": "URL_NOT_ALLOWED",
+    "message": "Target resolves to a private or reserved address",
+    "requestId": "3ccecb63-49fb-4482-97ee-120b1d57aa09"
+  }
+}
+```
+
+Validation failure for an unsupported scheme:
+
+```bash
+curl -X POST https://page-pulse-9riw.onrender.com/v1/audit \
+  -H 'content-type: application/json' \
+  -d '{"url":"file:///etc/passwd"}'
+```
+
+```json
+{
+  "error": {
+    "code": "VALIDATION_FAILED",
+    "message": "Invalid request body.",
+    "requestId": "9f2c1a3e-...",
+    "details": [{ "field": "url", "message": "Only http and https URLs are supported." }]
+  }
+}
+```
+
+Unsupported content type:
+
+```bash
+curl -X POST https://page-pulse-9riw.onrender.com/v1/audit \
+  -H 'content-type: application/json' \
+  -d '{"url":"https://example.com/favicon.ico"}'
+```
+
+```json
+{
+  "error": {
+    "code": "UNSUPPORTED_CONTENT_TYPE",
+    "message": "Target did not return HTML.",
+    "requestId": "9f2c1a3e-..."
+  }
+}
+```
 
 ---
 

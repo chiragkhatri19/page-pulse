@@ -337,4 +337,25 @@ The single hardest rollback constraint: **the previous version must always be ab
 
 ---
 
+## 5. What is shipped now versus what changes at scale
+
+Task A is intentionally a single deployable service, because the assignment asks for something live and runnable. Task B keeps the same behavior but moves shared state and long-running work to infrastructure that survives multiple replicas.
+
+| Concern | Shipped in Task A | Scale version in Task B | Why it changes |
+| --- | --- | --- | --- |
+| Report cache | In-process TTL + LRU cache | Redis TTL cache, optionally edge-cached for GET requests | Multiple replicas need one shared cache, not N smaller caches. |
+| Repeat cold requests | In-process single-flight map | Redis `SET NX PX` lock plus pub/sub or job subscription | A 500-request burst should trigger one origin fetch across the fleet, not one per replica. |
+| Rate limiting | In-process token bucket per client | Redis Lua token bucket | Per-client limits must not multiply by the number of API replicas. |
+| Global concurrency | Per-process bounded semaphore | Per-replica semaphore plus autoscaling and LB `/readyz` checks | Outbound sockets are still local resources, but saturation must remove the instance from rotation. |
+| Per-host protection | In-process host bulkhead and circuit breaker | Redis-backed host state plus local per-replica permits | One failing target host should not consume the entire fleet. |
+| Slow origins | Synchronous timeout with structured error | Convert to async job after a sync deadline | The SLA should not depend on a third-party website's latency. |
+| Queueing | Bounded in-process wait queue for admission control | Redis Streams / BullMQ with priority lanes and DLQ | Durable work needs acknowledgements, retry and backpressure across workers. |
+| Audit history | Not persisted | Postgres audit history and usage records | The live task does not need accounts or history, but customers will. |
+| Observability | Structured JSON logs with request IDs | OpenTelemetry metrics, logs and traces | Local logs prove behavior; production needs fleet-level SLOs and alerts. |
+| Rollback | GitHub Actions + Render deploy history | Immutable image tags, canary rollout, previous-SHA rollback | A customer-facing SLA needs a defined blast-radius and rollback process. |
+
+This table is the boundary between implementation and architecture: the core audit pipeline stays the same, while the state holders and admission-control points become shared and observable.
+
+---
+
 Built for [Digital Heroes Training Task](https://digitalheroesco.com).
