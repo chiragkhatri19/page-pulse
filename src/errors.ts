@@ -89,3 +89,11 @@ export const capacityExceeded = () =>
     message: 'Server is at capacity. Retry shortly.',
     retryAfterSeconds: 2,
   });
+
+export const targetTemporarilyUnavailable = (message: string, retryAfterSeconds: number) =>
+  new AppError({
+    statusCode: 502,
+    code: ErrorCode.TARGET_UNREACHABLE,
+    message,
+    retryAfterSeconds,
+  });

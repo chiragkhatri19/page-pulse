@@ -1,5 +1,11 @@
 import type { Config } from '../config.js';
-import { AppError, ErrorCode, urlNotAllowed, capacityExceeded } from '../errors.js';
+import {
+  AppError,
+  ErrorCode,
+  urlNotAllowed,
+  capacityExceeded,
+  targetTemporarilyUnavailable,
+} from '../errors.js';
 import { analyze, type PageFacts, type CheckResult } from './analyze.js';
 import { cacheKeyFor, SingleFlight, type CacheStore } from './cache.js';
 import {
@@ -10,6 +16,7 @@ import {
   FetchTooLargeError,
   type FetchResult,
 } from './fetcher.js';
+import { HostCircuitOpenError, HostConcurrencyError, type HostGuard } from './hostGuard.js';
 import { score, type ScoreResult } from './score.js';
 import { QueueFullError, QueueTimeoutError, type Semaphore } from './semaphore.js';
 import { assertPublicTarget, normaliseUrl, type NormalisedTarget } from './ssrf.js';
@@ -54,6 +61,7 @@ export class AuditService {
       cache: CacheStore<AuditReport>;
       semaphore: Semaphore;
       singleFlight: SingleFlight<AuditReport>;
+      hostGuard?: HostGuard;
       /** Injectable so tests can drive timing and failures deterministically. */
       fetchImpl?: typeof fetchPage;
       now?: () => number;
@@ -149,18 +157,24 @@ export class AuditService {
 
     let fetched: FetchResult;
     try {
-      fetched = await this.deps.semaphore.run(() =>
-        fetchImpl(url, {
-          headersTimeoutMs: this.cfg.FETCH_HEADERS_TIMEOUT_MS,
-          totalTimeoutMs: this.cfg.AUDIT_TIMEOUT_MS,
-          maxBytes: this.cfg.MAX_RESPONSE_BYTES,
-          maxRedirects: this.cfg.MAX_REDIRECTS,
-          userAgent: this.cfg.USER_AGENT,
-          pinnedAddresses: target.addresses,
-          revalidateTarget: (u) => this.revalidateHop(u),
-          ...(signal ? { signal } : {}),
-        }),
-      );
+      const fetchWithGlobalLimit = () =>
+        this.deps.semaphore.run(() =>
+          fetchImpl(url, {
+            headersTimeoutMs: this.cfg.FETCH_HEADERS_TIMEOUT_MS,
+            totalTimeoutMs: this.cfg.AUDIT_TIMEOUT_MS,
+            maxBytes: this.cfg.MAX_RESPONSE_BYTES,
+            maxRedirects: this.cfg.MAX_REDIRECTS,
+            userAgent: this.cfg.USER_AGENT,
+            pinnedAddresses: target.addresses,
+            revalidateTarget: (u) => this.revalidateHop(u),
+            ...(signal ? { signal } : {}),
+          }),
+        );
+      fetched = this.deps.hostGuard
+        ? await this.deps.hostGuard.run(url.hostname, fetchWithGlobalLimit, (err) =>
+            this.countsAgainstHost(err),
+          )
+        : await fetchWithGlobalLimit();
     } catch (err) {
       throw this.mapFetchError(err);
     }
@@ -197,6 +211,10 @@ export class AuditService {
 
   private mapFetchError(err: unknown): AppError {
     if (err instanceof AppError) return err;
+    if (err instanceof HostConcurrencyError) return capacityExceeded();
+    if (err instanceof HostCircuitOpenError) {
+      return targetTemporarilyUnavailable(err.message, err.retryAfterSeconds);
+    }
     if (err instanceof QueueFullError || err instanceof QueueTimeoutError) return capacityExceeded();
     if (err instanceof FetchSsrfError) return urlNotAllowed(err.message);
     if (err instanceof FetchTimeoutError) {
@@ -225,5 +243,9 @@ export class AuditService {
       code: ErrorCode.TARGET_UNREACHABLE,
       message: 'Could not reach the target.',
     });
+  }
+
+  private countsAgainstHost(err: unknown): boolean {
+    return err instanceof FetchTimeoutError || err instanceof FetchNetworkError;
   }
 }

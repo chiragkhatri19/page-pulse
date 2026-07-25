@@ -9,6 +9,7 @@ import { loadConfig, type Config } from './config.js';
 import { AppError, ErrorCode, badRequest, rateLimited } from './errors.js';
 import { AuditService, type AuditReport } from './lib/auditService.js';
 import { MemoryCache, SingleFlight, type CacheStore } from './lib/cache.js';
+import { derivePerHostLimit, HostGuard } from './lib/hostGuard.js';
 import { clientKeyFrom, TokenBucketRateLimiter } from './lib/rateLimit.js';
 import { createSemaphore, type Semaphore } from './lib/semaphore.js';
 
@@ -31,6 +32,7 @@ export interface BuildOptions {
   config?: Config;
   cache?: CacheStore<AuditReport>;
   semaphore?: Semaphore;
+  hostGuard?: HostGuard;
   auditService?: AuditService;
 }
 
@@ -38,6 +40,7 @@ export interface AppContext {
   config: Config;
   cache: CacheStore<AuditReport>;
   semaphore: Semaphore;
+  hostGuard: HostGuard;
   limiter: TokenBucketRateLimiter;
   service: AuditService;
   startedAt: number;
@@ -58,9 +61,26 @@ export function buildServer(opts: BuildOptions = {}): FastifyInstance & { ctx: A
     max: config.RATE_LIMIT_MAX,
     windowSeconds: config.RATE_LIMIT_WINDOW_SECONDS,
   });
+  const perHostLimit = derivePerHostLimit(
+    config.MAX_CONCURRENT_AUDITS,
+    config.MAX_CONCURRENT_AUDITS_PER_HOST,
+  );
+  const hostGuard =
+    opts.hostGuard ??
+    new HostGuard({
+      maxConcurrentPerHost: perHostLimit,
+      failureThreshold: config.HOST_CIRCUIT_FAILURE_THRESHOLD,
+      cooldownMs: config.HOST_CIRCUIT_COOLDOWN_MS,
+    });
   const service =
     opts.auditService ??
-    new AuditService({ config, cache, semaphore, singleFlight: new SingleFlight<AuditReport>() });
+    new AuditService({
+      config,
+      cache,
+      semaphore,
+      hostGuard,
+      singleFlight: new SingleFlight<AuditReport>(),
+    });
 
   const app = Fastify({
     logger: {
@@ -101,7 +121,7 @@ export function buildServer(opts: BuildOptions = {}): FastifyInstance & { ctx: A
     keepAliveTimeout: 30_000,
   });
 
-  const ctx: AppContext = { config, cache, semaphore, limiter, service, startedAt: Date.now() };
+  const ctx: AppContext = { config, cache, semaphore, hostGuard, limiter, service, startedAt: Date.now() };
   const decorated = app as unknown as FastifyInstance & { ctx: AppContext };
   decorated.ctx = ctx;
 
@@ -197,8 +217,10 @@ export function buildServer(opts: BuildOptions = {}): FastifyInstance & { ctx: A
     cache: { ...cache.stats(), entries: cache.size(), ttlSeconds: config.CACHE_TTL_SECONDS },
     concurrency: {
       limit: config.MAX_CONCURRENT_AUDITS,
+      perHostLimit,
       inFlight: semaphore.inFlight,
       queueDepth: semaphore.queueDepth,
+      hosts: hostGuard.stats,
     },
     rateLimit: {
       max: config.RATE_LIMIT_MAX,

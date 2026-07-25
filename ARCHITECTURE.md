@@ -209,8 +209,8 @@ Ranked by probability × blast radius. All three are specific to auditing third-
 **Mechanism.** A customer schedules monitoring against a site that goes into a degraded state where it accepts TCP connections and then never responds. Our fetches sit open until the timeout. If 60 of a replica's 60 permits are held by that one dying host, every *other* audit queues behind it. `/readyz` flips, the LB removes the instance, its traffic lands on the remaining replicas, they fill with the same slow host, and the whole fleet falls over. One broken website has taken out the service.
 
 **Mitigation, in layers:**
-- **Per-host permit caps.** No single target hostname may hold more than 15% of a replica's permits. This is the single most important control: it structurally bounds the blast radius of any one bad target.
-- **Per-host circuit breaker.** 5 consecutive timeouts for a host opens the breaker for 60 s; subsequent requests fail immediately with `TARGET_UNREACHABLE` and a clear message rather than consuming a permit. Half-open probe on recovery.
+- **Per-host permit caps.** No single target hostname may hold more than 15% of a replica's permits. This is the single most important control: it structurally bounds the blast radius of any one bad target. **Shipped in the single-node build** through `src/lib/hostGuard.ts`.
+- **Per-host circuit breaker.** 5 consecutive timeouts for a host opens the breaker for 60 s; subsequent requests fail immediately with `TARGET_UNREACHABLE` and a clear message rather than consuming a permit. Half-open probe on recovery. **Shipped locally** with the same Redis-backed shape planned for the multi-node version.
 - **Aggressive header timeout.** 5 s to first byte. A host that has not started responding by then is not going to.
 - **Bulkhead by lane.** Scheduled and bulk audits draw from a separate permit pool, so a bad scheduled job cannot consume the interactive budget.
 

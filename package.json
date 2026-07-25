@@ -14,7 +14,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "load:test": "node scripts/load-test.mjs"
   },
   "dependencies": {
     "@fastify/cors": "^10.0.1",

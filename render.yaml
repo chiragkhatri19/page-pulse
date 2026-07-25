@@ -19,5 +19,11 @@ services:
         value: "60"
       - key: MAX_CONCURRENT_AUDITS
         value: "25"
+      - key: MAX_CONCURRENT_AUDITS_PER_HOST
+        value: "4"
+      - key: HOST_CIRCUIT_FAILURE_THRESHOLD
+        value: "5"
+      - key: HOST_CIRCUIT_COOLDOWN_MS
+        value: "60000"
       - key: AUDIT_TIMEOUT_MS
         value: "8000"

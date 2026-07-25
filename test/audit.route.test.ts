@@ -243,6 +243,52 @@ describe('input validation and error contract', () => {
     await app.close();
   });
 
+  it('sheds same-host work once the per-host concurrency cap is reached', async () => {
+    const app = makeApp({
+      AUDIT_TIMEOUT_MS: '600',
+      FETCH_HEADERS_TIMEOUT_MS: '600',
+      CACHE_TTL_SECONDS: '0',
+      MAX_CONCURRENT_AUDITS: '5',
+      MAX_CONCURRENT_AUDITS_PER_HOST: '1',
+    });
+
+    const responses = await Promise.all([
+      app.inject({ method: 'POST', url: '/v1/audit', payload: { url: `${fixture.origin}/slow?host-cap=1` } }),
+      app.inject({ method: 'POST', url: '/v1/audit', payload: { url: `${fixture.origin}/slow?host-cap=2` } }),
+    ]);
+
+    expect(responses.map((r) => r.statusCode).sort()).toEqual([503, 504]);
+    expect(responses.find((r) => r.statusCode === 503)?.json().error.code).toBe('CAPACITY_EXCEEDED');
+    await app.close();
+  });
+
+  it('opens a host circuit after repeated target timeouts', async () => {
+    const app = makeApp({
+      AUDIT_TIMEOUT_MS: '600',
+      FETCH_HEADERS_TIMEOUT_MS: '600',
+      CACHE_TTL_SECONDS: '0',
+      HOST_CIRCUIT_FAILURE_THRESHOLD: '1',
+      HOST_CIRCUIT_COOLDOWN_MS: '60000',
+    });
+
+    const first = await app.inject({
+      method: 'POST',
+      url: '/v1/audit',
+      payload: { url: `${fixture.origin}/slow?circuit=1` },
+    });
+    const second = await app.inject({
+      method: 'POST',
+      url: '/v1/audit',
+      payload: { url: `${fixture.origin}/good?circuit=2` },
+    });
+
+    expect(first.statusCode).toBe(504);
+    expect(second.statusCode).toBe(502);
+    expect(second.json().error.code).toBe('TARGET_UNREACHABLE');
+    expect(second.headers['retry-after']).toBeDefined();
+    await app.close();
+  });
+
   it('returns 502 when the target refuses the connection', async () => {
     const app = makeApp({ AUDIT_TIMEOUT_MS: '2000' });
     const res = await app.inject({

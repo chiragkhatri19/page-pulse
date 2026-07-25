@@ -25,6 +25,12 @@ const EnvSchema = z.object({
   CONCURRENCY_QUEUE_TIMEOUT_MS: z.coerce.number().int().min(0).default(2_000),
   /** Max requests parked waiting for a slot. Beyond this we fail fast. */
   MAX_QUEUE_DEPTH: z.coerce.number().int().min(0).default(200),
+  /** Per-host in-flight cap. 0 derives a conservative cap from the global limit. */
+  MAX_CONCURRENT_AUDITS_PER_HOST: z.coerce.number().int().min(0).default(0),
+  /** Consecutive target failures before a hostname's circuit opens. */
+  HOST_CIRCUIT_FAILURE_THRESHOLD: z.coerce.number().int().min(1).default(5),
+  /** How long an unhealthy hostname is shed before we try it again. */
+  HOST_CIRCUIT_COOLDOWN_MS: z.coerce.number().int().min(1000).default(60_000),
 
   /** Configurable cache window. 0 disables caching entirely. */
   CACHE_TTL_SECONDS: z.coerce.number().int().min(0).default(300),

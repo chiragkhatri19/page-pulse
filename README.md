@@ -6,6 +6,7 @@ Live: **https://page-pulse-9riw.onrender.com**
 CI: ![CI](https://github.com/chiragkhatri19/page-pulse/actions/workflows/ci.yml/badge.svg)
 
 Built for the Digital Heroes training task. Architecture for the 10k audits/day scenario is in [ARCHITECTURE.md](./ARCHITECTURE.md).
+OpenAPI contract: [openapi.yaml](./openapi.yaml). Load-test notes: [LOAD_TEST.md](./LOAD_TEST.md).
 
 ---
 
@@ -16,7 +17,7 @@ It is a single stateless HTTP service. One request in, one report out:
 1. Validate and normalise the URL (`example.com` becomes `https://example.com`).
 2. Resolve DNS ourselves and refuse anything landing on a private, loopback or link-local address. An audit service is an SSRF machine by design; this is the guard.
 3. Check the cache. A repeat audit inside the window never touches the origin.
-4. Acquire a concurrency permit. Bounded queue, bounded wait.
+4. Acquire host-level and global concurrency permits. One slow hostname cannot consume the whole audit pool.
 5. Fetch with layered timeouts and a byte cap, following at most 5 redirects.
 6. Parse and score 24 weighted checks. Scoring is pure and deterministic.
 
@@ -26,9 +27,10 @@ It is a single stateless HTTP service. One request in, one report out:
 npm install
 cp .env.example .env
 npm run dev            # http://localhost:3000
-npm test               # 137 tests
+npm test               # 145 tests
 npm run test:coverage  # enforces 90% statements / 85% functions / 80% branches
 npm run build && npm start
+npm run load:test      # optional burst test against localhost
 ```
 
 Docker:
@@ -189,6 +191,9 @@ Every knob is environment-driven and validated at boot with Zod. A malformed val
 | `MAX_CONCURRENT_AUDITS` | `25` | Outbound fetches in flight at once. |
 | `MAX_QUEUE_DEPTH` | `200` | Requests allowed to wait for a permit. Beyond this, fail fast with 503. |
 | `CONCURRENCY_QUEUE_TIMEOUT_MS` | `2000` | Max wait for a permit. |
+| `MAX_CONCURRENT_AUDITS_PER_HOST` | `0` | Per-host in-flight cap. `0` derives a conservative value from the global cap. |
+| `HOST_CIRCUIT_FAILURE_THRESHOLD` | `5` | Consecutive target health failures before a hostname's circuit opens. |
+| `HOST_CIRCUIT_COOLDOWN_MS` | `60000` | Time to shed an unhealthy hostname before allowing another probe. |
 | **`CACHE_TTL_SECONDS`** | `300` | **The cache window.** `0` disables caching entirely. |
 | `CACHE_MAX_ENTRIES` | `1000` | LRU capacity. |
 | `RATE_LIMIT_MAX` | `30` | Token bucket capacity per client. |
@@ -205,7 +210,7 @@ A cache alone doesn't solve the cold-start burst: 500 concurrent requests for on
 
 **Rate limiting.** Token bucket, not a fixed window. A fixed window lets a client spend its full quota at 11:59:59 and again at 12:00:00, a 2x burst at the boundary. A token bucket refills continuously, so it smooths that out while still allowing a legitimate burst up to capacity. Identity is the API key when present, otherwise the first `x-forwarded-for` hop, otherwise the socket address. Idle buckets are swept on an interval so memory stays bounded by active clients rather than lifetime clients.
 
-**Concurrency.** A semaphore, not a queue library. Both the queue depth and the wait time are bounded, because unbounded queueing under load just converts a fast failure into a slow one while the memory graph climbs. Once the queue is full, `/readyz` reports 503 and the load balancer stops sending traffic.
+**Concurrency.** A semaphore, not a queue library. Both the queue depth and the wait time are bounded, because unbounded queueing under load just converts a fast failure into a slow one while the memory graph climbs. Once the queue is full, `/readyz` reports 503 and the load balancer stops sending traffic. A host-level guard sits in front of the global semaphore, capping in-flight audits per hostname and opening a short circuit after repeated target timeouts or network failures. That prevents one broken origin from starving unrelated audits.
 
 **Timeouts.** Layered, not one number: connect timeout, headers timeout, and an `AbortSignal` capping the whole operation. A target that completes its handshake and then trickles bytes forever is caught by the third one.
 
@@ -213,20 +218,31 @@ A cache alone doesn't solve the cold-start burst: 500 concurrent requests for on
 
 **Logging.** Pino, one JSON object per line, with a stable field set (`service`, `env`, `reqId`, `event`, plus event-specific fields). `authorization`, `x-api-key` and `cookie` are redacted at the serialiser, so a secret can't reach the log pipeline by accident. Named events (`audit_completed`, `rate_limited`, `request_failed`) mean you query on `event`, not on substrings of a message.
 
+## Known limitations
+
+These are deliberate boundaries in the submitted build, not accidental omissions.
+
+- **Static HTML only.** Page Pulse does not execute JavaScript or inspect the browser-rendered DOM, so heavily client-rendered SPAs may score as the initial shell rather than the final user-visible page.
+- **No Core Web Vitals.** The performance pillar uses response and markup signals such as TTFB, payload size and blocking-script hints. Real LCP, INP and CLS require browser instrumentation and belong in the slower async render tier described in `ARCHITECTURE.md`.
+- **Single-node state.** Task A uses in-process cache, rate limiting, single-flight and host-guard state because the live deployment is a single service. The scale design moves those concerns to Redis so they work across replicas.
+- **HTML document scope.** Non-HTML targets return `UNSUPPORTED_CONTENT_TYPE`; the service is not a file scanner, media analyzer or malware sandbox.
+- **Best-effort external fetches.** Some targets block cloud-hosted egress IPs or bot user agents. Page Pulse reports those outcomes clearly, but it cannot force a third-party origin to serve content.
+
 ## Testing
 
-137 tests across 6 files. Coverage is enforced in CI and the build fails below the thresholds.
+145 tests across 7 files. Coverage is enforced in CI and the build fails below the thresholds.
 
 | File | Covers |
 | --- | --- |
 | `ssrf.test.ts` | URL normalisation, private-range detection for v4 and v6, DNS rebinding, cloud metadata addresses, credential-embedding bypass. |
 | `fetcher.test.ts` | DNS-pinned connections dial the validated address rather than re-resolving DNS; a redirect hop that fails SSRF re-validation is rejected; a redirect hop that passes is followed and re-pinned; redirect-hop limits are enforced. |
 | `cache.test.ts` | TTL expiry at the boundary, LRU eviction order, key normalisation, single-flight collapse and its failure path. |
+| `hostGuard.test.ts` | Per-host concurrency caps, circuit-open behavior, cooldown recovery, and derived limit calculation. |
 | `rateLimit.test.ts` | Bucket exhaustion, continuous refill, retry-after correctness, per-client isolation, sweep. Plus semaphore concurrency ceiling, queue-full and queue-timeout paths, permit release on throw. |
 | `analyze.test.ts` | Fact extraction from good and bad fixtures, every non-trivial check, weighted scoring, grade boundaries, recommendation ordering, determinism. |
 | `audit.route.test.ts` | End to end against a real local origin: caching (asserting the origin was not re-hit), fresh bypass, burst deduplication, redirects, every error code, rate limit headers and 429, request-ID propagation. |
 
-Tests that assert on time inject a fake clock rather than sleeping, so they're deterministic and the suite finishes in about 3 seconds.
+Tests that assert on time inject a fake clock rather than sleeping, so they're deterministic and the suite finishes in a few seconds.
 
 CI runs on every push: typecheck, tests with coverage on Node 20 and 22, build, then a Docker build plus a smoke job that starts the container and asserts a real audit works, that the second request returns `x-cache: HIT`, and that the SSRF guard returns 422 for `169.254.169.254`.
 
@@ -244,11 +260,12 @@ src/
     analyze.ts           HTML parsing and the 24 checks
     score.ts             Pure weighted scoring
     cache.ts             TTL + LRU store, cache keys, single-flight
+    hostGuard.ts         Per-host bulkhead and circuit breaker
     rateLimit.ts         Token bucket and client identity
     semaphore.ts         Bounded concurrency with bounded queueing
     auditService.ts      Orchestration
 public/index.html        Landing page and live demo
-test/                    137 tests
+test/                    145 tests
 ```
 
 ---
