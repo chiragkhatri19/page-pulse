@@ -3,14 +3,14 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Page Pulse: URL audit API</title>
+    <title>pagepulse.run: production URL audits</title>
     <meta
       name="description"
-      content="Page Pulse audits any public URL for SEO, accessibility, performance and security signals, and returns a scored JSON report."
+      content="pagepulse.run audits public URLs with validation, timeouts, caching, rate limits and structured JSON results."
     />
     <link rel="canonical" href="https://page-pulse-9riw.onrender.com/" />
-    <meta property="og:title" content="Page Pulse: URL audit API" />
-    <meta property="og:description" content="Audit any public URL. Scored JSON in one request." />
+    <meta property="og:title" content="pagepulse.run: production URL audits" />
+    <meta property="og:description" content="A production-minded URL audit surface with scored JSON in one request." />
     <meta property="og:type" content="website" />
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>%E2%9D%A4</text></svg>" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -142,13 +142,21 @@
         pointer-events: auto;
       }
       .wordmark {
+        display: flex;
+        align-items: baseline;
+        gap: 2px;
         padding: 7px 10px 8px;
-        font-family: var(--display);
-        font-size: 24px;
+        font-family: var(--mono);
+        font-size: 15px;
+        font-weight: 600;
         line-height: 1;
         letter-spacing: 0;
       }
-      .wordmark em { font-style: italic; color: var(--pen); }
+      .wordmark em {
+        color: var(--pen);
+        font-style: normal;
+        font-weight: 500;
+      }
       .masthead nav {
         display: flex;
         align-items: center;
@@ -183,16 +191,13 @@
       }
 
       .hero {
-        padding: 78px 0 54px;
+        padding: 108px 0 48px;
         position: relative;
       }
       .hero .wrap {
-        display: grid;
-        grid-template-columns: minmax(0, 0.92fr) minmax(360px, 1.08fr);
-        align-items: end;
-        gap: 36px;
+        max-width: 1010px;
       }
-      .hero-copy { padding-bottom: 18px; }
+      .hero-copy { max-width: 860px; }
       .case-line {
         display: block;
         width: fit-content;
@@ -206,27 +211,27 @@
         margin: 0 0 22px;
       }
       h1 {
-        max-width: 12ch;
+        max-width: 13ch;
         margin: 0 0 22px;
         font-family: var(--display);
-        font-size: clamp(48px, 8vw, 104px);
+        font-size: clamp(58px, 11vw, 136px);
         font-weight: 650;
         letter-spacing: 0;
-        line-height: 0.91;
+        line-height: 0.87;
         text-wrap: balance;
       }
       h1 em { color: var(--pen); font-style: italic; font-weight: 520; }
       .lede {
-        max-width: 62ch;
+        max-width: 47ch;
         margin: 0;
         color: var(--ink-soft);
-        font-size: 18px;
-        line-height: 1.72;
+        font-size: clamp(19px, 2.2vw, 25px);
+        line-height: 1.42;
         text-wrap: pretty;
       }
       .work-note {
-        max-width: 56ch;
-        margin: 18px 0 0;
+        max-width: 58ch;
+        margin: 26px 0 0;
         border-left: 1px solid var(--line-strong);
         color: var(--ink);
         font-family: var(--mono);
@@ -234,8 +239,39 @@
         line-height: 1.75;
         padding-left: 14px;
       }
+      .hero-actions {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        flex-wrap: wrap;
+        margin-top: 28px;
+      }
+      .hero-actions a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 46px;
+        border-radius: 14px;
+        text-decoration: none;
+      }
+      .hero-primary {
+        border: 1px solid rgba(22, 24, 18, 0.88);
+        background: var(--ink);
+        box-shadow: 0 14px 32px rgba(22, 24, 18, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+        color: var(--paper);
+        font-family: var(--mono);
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        padding: 0 18px;
+        text-transform: uppercase;
+      }
+      .hero-secondary {
+        border-bottom: 1px solid rgba(185, 58, 47, 0.32);
+        color: var(--pen);
+        font-family: var(--mono);
+        font-size: 12px;
+      }
 
-      .trace-panel,
       .console-panel,
       .api-panel {
         border: 1px solid rgba(255, 255, 255, 0.62);
@@ -244,8 +280,6 @@
         box-shadow: var(--shadow), inset 0 1px 0 rgba(255, 255, 255, 0.86);
         padding: 7px;
       }
-      .trace-panel { margin: 0; transform: rotate(1.2deg); }
-      .trace-inner,
       .panel-inner {
         overflow: hidden;
         border: 1px solid var(--line);
@@ -254,55 +288,6 @@
           linear-gradient(135deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.32)),
           rgba(255, 252, 244, 0.64);
       }
-      .trace-head {
-        display: flex;
-        justify-content: space-between;
-        gap: 12px;
-        border-bottom: 1px solid var(--line);
-        color: var(--ink-soft);
-        font-family: var(--mono);
-        font-size: 11px;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-        padding: 13px 15px;
-      }
-      #trace {
-        display: block;
-        width: 100%;
-        height: 220px;
-        background:
-          linear-gradient(rgba(23, 109, 90, 0.07) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(23, 109, 90, 0.055) 1px, transparent 1px);
-        background-size: 18px 18px;
-      }
-      .trace-stage {
-        position: relative;
-        overflow: hidden;
-      }
-      .trace-stage::after {
-        content: "";
-        position: absolute;
-        inset: 0 auto 0 -24%;
-        width: 22%;
-        background: linear-gradient(90deg, transparent, rgba(255, 252, 244, 0.72), transparent);
-        opacity: 0;
-        transform: skewX(-13deg);
-        pointer-events: none;
-      }
-      .trace-panel[data-active="true"] .trace-stage::after {
-        animation: scanSweep 1.35s var(--motion) infinite;
-        opacity: 0.62;
-      }
-      #trace path { fill: none; stroke-linecap: round; stroke-linejoin: round; }
-      .trace-line {
-        stroke: var(--pen);
-        stroke-width: 2.4;
-        filter: drop-shadow(0 10px 14px rgba(185, 58, 47, 0.18));
-        stroke-dasharray: 2600;
-        stroke-dashoffset: 2600;
-        animation: draw 2.4s var(--motion) forwards;
-      }
-      @keyframes draw { to { stroke-dashoffset: 0; } }
       @keyframes scanSweep {
         from { transform: translateX(0) skewX(-13deg); }
         to { transform: translateX(560%) skewX(-13deg); }
@@ -719,16 +704,13 @@
           animation-iteration-count: 1 !important;
           transition-duration: 0.001ms !important;
         }
-        .trace-line { stroke-dashoffset: 0; }
       }
 
       @media (max-width: 820px) {
         .wrap { padding: 0 18px; }
         .hero { padding-top: 48px; }
-        .hero .wrap { grid-template-columns: 1fr; gap: 26px; }
+        .hero .wrap { max-width: 1010px; }
         .hero-copy { padding-bottom: 0; }
-        .trace-panel { transform: none; }
-        #trace { height: 150px; }
         .field { grid-template-columns: 1fr; }
         button { min-height: 48px; }
         .scan-loader { grid-template-columns: 1fr; }
@@ -748,9 +730,9 @@
     <a class="skip-link" href="#console">Skip to audit</a>
     <header class="masthead">
       <div class="wrap">
-        <div class="wordmark">Page <em>Pulse</em></div>
+        <div class="wordmark">pagepulse<em>.run</em></div>
         <nav>
-          <a href="#console" aria-current="page">Run audit</a>
+          <a href="#console" aria-current="page">Run scan</a>
           <a href="#api">API</a>
           <a href="https://github.com/chiragkhatri19/page-pulse">Source</a>
         </nav>
@@ -762,40 +744,27 @@
         <div class="wrap">
           <div class="hero-copy">
             <p class="case-line">Role 03 / production URL audit</p>
-            <h1>Take the <em>vitals</em> of any public page.</h1>
+            <h1>Scan URLs like production traffic.</h1>
             <p class="lede">
-              One request in, one scored report out. Page Pulse fetches a URL under strict timeouts,
-              reads its markup and response headers, and grades it across SEO, accessibility,
-              performance and security. Repeat audits inside the cache window come back without
-              touching the origin.
+              A public URL goes in. A bounded, cached, rate-limited audit comes back with the
+              failures that matter first.
             </p>
             <p class="work-note">
-              This work is intentionally small on the surface and heavy underneath: validation,
-              SSRF protection, queue pressure, cache behavior, request IDs and failure contracts are
-              visible in the running product.
+              This work avoids the demo trap. The UI stays quiet while the service shows the harder
+              parts: SSRF defense, request IDs, structured errors, queue pressure and cache behavior.
             </p>
-          </div>
-
-          <figure class="trace-panel">
-            <div class="trace-inner">
-              <figcaption class="trace-head">
-                <span>Trace / live audit output</span>
-                <span id="trace-label">idle</span>
-              </figcaption>
-              <div class="trace-stage">
-                <svg id="trace" viewBox="0 0 1000 120" preserveAspectRatio="none" aria-hidden="true">
-                  <path class="trace-line" id="trace-path" d="" />
-                </svg>
-              </div>
+            <div class="hero-actions">
+              <a class="hero-primary" href="#console">Start scan</a>
+              <a class="hero-secondary" href="#api">Read API contract</a>
             </div>
-          </figure>
+          </div>
         </div>
       </section>
 
       <section class="console" id="console">
         <div class="wrap console-panel">
           <div class="panel-inner">
-            <h2>Run an audit</h2>
+            <h2>Run scan</h2>
             <p class="section-note">
               Enter any public http or https URL. Private and loopback addresses are rejected before a
               socket opens.
@@ -898,9 +867,6 @@ curl 'https://page-pulse-9riw.onrender.com/v1/audit?url=example.com&amp;fresh=tr
         var resultDetails = document.getElementById("result-details");
         var loader = document.getElementById("loader");
         var loaderCopy = document.getElementById("loader-copy");
-        var tracePath = document.getElementById("trace-path");
-        var traceLabel = document.getElementById("trace-label");
-        var tracePanel = document.querySelector(".trace-panel");
         var consolePanel = document.querySelector(".console-panel");
 
         var PILLAR_LABELS = {
@@ -935,34 +901,6 @@ curl 'https://page-pulse-9riw.onrender.com/v1/audit?url=example.com&amp;fresh=tr
           security: "This usually belongs in response headers or edge middleware.",
         };
 
-        /**
-         * The hero trace is not decoration: each check becomes one beat, and a
-         * failing check spikes the pen. An idle page draws a flat resting rhythm.
-         */
-        function drawTrace(checks) {
-          var beats = checks && checks.length ? checks : null;
-          var count = beats ? beats.length : 24;
-          var step = 1000 / count;
-          var mid = 60;
-          var d = "M0," + mid;
-          for (var i = 0; i < count; i++) {
-            var x = i * step;
-            var failed = beats ? !beats[i].passed : i % 7 === 3;
-            var weight = beats ? beats[i].weight : 4;
-            var amp = failed ? Math.min(46, 10 + weight * 4) : 6;
-            d +=
-              " L" + (x + step * 0.3).toFixed(1) + "," + mid +
-              " L" + (x + step * 0.45).toFixed(1) + "," + (mid - amp).toFixed(1) +
-              " L" + (x + step * 0.6).toFixed(1) + "," + (mid + amp * 0.42).toFixed(1) +
-              " L" + (x + step * 0.75).toFixed(1) + "," + mid;
-          }
-          d += " L1000," + mid;
-          tracePath.setAttribute("d", d);
-          tracePath.classList.remove("trace-line");
-          void tracePath.getBoundingClientRect();
-          tracePath.classList.add("trace-line");
-        }
-
         function setStatus(message, tone) {
           status.textContent = message;
           if (tone) status.setAttribute("data-tone", tone);
@@ -975,7 +913,6 @@ curl 'https://page-pulse-9riw.onrender.com/v1/audit?url=example.com&amp;fresh=tr
           loader.hidden = !active;
           loader.setAttribute("aria-hidden", active ? "false" : "true");
           if (message) loaderCopy.textContent = message;
-          tracePanel.setAttribute("data-active", active ? "true" : "false");
           consolePanel.setAttribute("data-loading", active ? "true" : "false");
         }
 
@@ -1068,8 +1005,6 @@ curl 'https://page-pulse-9riw.onrender.com/v1/audit?url=example.com&amp;fresh=tr
           });
 
           result.setAttribute("data-visible", "true");
-          drawTrace(report.checks);
-          traceLabel.textContent = report.finalUrl.replace(/^https?:\/\//, "");
         }
 
         async function audit() {
@@ -1081,7 +1016,6 @@ curl 'https://page-pulse-9riw.onrender.com/v1/audit?url=example.com&amp;fresh=tr
           }
           setLoading(true, "Opening a bounded request, then scoring the response.");
           setStatus("Fetching and grading " + value);
-          traceLabel.textContent = "reading";
 
           try {
             window.setTimeout(function () {
@@ -1102,7 +1036,6 @@ curl 'https://page-pulse-9riw.onrender.com/v1/audit?url=example.com&amp;fresh=tr
                   " (request " + payload.error.requestId + ")",
                 "error"
               );
-              traceLabel.textContent = "no signal";
               return;
             }
             setStatus(
@@ -1112,7 +1045,6 @@ curl 'https://page-pulse-9riw.onrender.com/v1/audit?url=example.com&amp;fresh=tr
             render(payload);
           } catch (err) {
             setStatus("Network error reaching the audit service. Try again.", "error");
-            traceLabel.textContent = "no signal";
           } finally {
             setLoading(false);
           }
@@ -1131,8 +1063,6 @@ curl 'https://page-pulse-9riw.onrender.com/v1/audit?url=example.com&amp;fresh=tr
             });
           }
         );
-
-        drawTrace(null);
       })();
     </script>
   </body>
