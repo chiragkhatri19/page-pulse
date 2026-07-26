@@ -6,13 +6,11 @@ Role: Software Development (SDE). Task A and Task B.
 
 - Live service: `https://page-pulse-9riw.onrender.com`
 - Repository: `https://github.com/chiragkhatri19/page-pulse`
-- Evaluator guide: [EVALUATOR_GUIDE.md](./EVALUATOR_GUIDE.md)
 - API contract: [README.md](./README.md)
 - Architecture document: [ARCHITECTURE.md](./ARCHITECTURE.md)
 - Drive-visible architecture PDF: [ARCHITECTURE.pdf](./ARCHITECTURE.pdf)
 - Visible architecture diagram: [ARCHITECTURE_DIAGRAM.png](./ARCHITECTURE_DIAGRAM.png)
 - OpenAPI contract: [openapi.yaml](./openapi.yaml)
-- Load-test evidence: [LOAD_TEST.md](./LOAD_TEST.md)
 - Verification proof: [PROOF.md](./PROOF.md)
 
 ## What I built
@@ -38,7 +36,7 @@ The live build also includes a small browser UI so the reviewer can try the API 
 | Live deployment | Render service at `https://page-pulse-9riw.onrender.com` |
 | README API contract | `README.md` |
 | OpenAPI contract | `openapi.yaml` |
-| Load-test evidence | `LOAD_TEST.md`, `scripts/load-test.mjs` |
+| Burst-test evidence | `PROOF.md`; load-test runner in the GitHub repo at `scripts/load-test.mjs` |
 
 ## Task B evidence
 
@@ -87,7 +85,7 @@ Additional checks already performed:
 - Footer contains `Built for Digital Heroes Training Task` and links to `https://digitalheroesco.com`.
 - GitHub repo is public.
 - `.env` is ignored and not tracked.
-- OpenAPI contract and load-test runner are included.
+- OpenAPI contract is included, and the load-test runner is in the public GitHub repo.
 
 ## Final pre-submit checklist
 
@@ -96,8 +94,7 @@ Additional checks already performed:
 - [x] README has API contract.
 - [x] Architecture document covers Task B.
 - [x] OpenAPI contract exists.
-- [x] Load-test evidence exists.
-- [x] Evaluator guide exists.
+- [x] Burst-test and coverage evidence exists in `PROOF.md`.
 - [x] Live proof document exists.
 - [x] Required footer credit exists on the live page.
 - [x] Local typecheck passes.

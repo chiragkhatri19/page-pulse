@@ -7,7 +7,7 @@ Role: Software Development (SDE)
 
 - Live service: https://page-pulse-9riw.onrender.com
 - GitHub repository: https://github.com/chiragkhatri19/page-pulse
-- Recommended first read: [EVALUATOR_GUIDE.md](./EVALUATOR_GUIDE.md)
+- Recommended first read: [SUBMISSION.md](./SUBMISSION.md)
 
 ## What this is
 
@@ -21,7 +21,7 @@ The important part is not the scoring UI. The important part is the production b
 2. Scan `https://example.com`.
 3. Scan it again and check that the second response is cached.
 4. Scan `http://169.254.169.254/latest/meta-data/` and confirm it returns `422 URL_NOT_ALLOWED`.
-5. Open [PROOF.md](./PROOF.md) for live verification evidence.
+5. Open [PROOF.md](./PROOF.md) for live verification, test coverage and burst-test evidence.
 6. Open [ARCHITECTURE.pdf](./ARCHITECTURE.pdf) for the architecture diagram in a Drive-visible document.
 7. Open [ARCHITECTURE.md](./ARCHITECTURE.md) for the full 10,000 audits/day and 500-concurrent-request design.
 8. Open [README.md](./README.md) for the API contract.

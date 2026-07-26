@@ -5,9 +5,9 @@ A production-minded URL audit service. Give it a public URL, it fetches the page
 Live: **https://page-pulse-9riw.onrender.com**
 CI: ![CI](https://github.com/chiragkhatri19/page-pulse/actions/workflows/ci.yml/badge.svg)
 
-Built for the Digital Heroes training task. Start with [EVALUATOR_GUIDE.md](./EVALUATOR_GUIDE.md) if you are reviewing the submission.
+Built for the Digital Heroes training task. Start with [START_HERE.md](./START_HERE.md) if you are reviewing the submission packet.
 
-Architecture for the 10k audits/day scenario is in [ARCHITECTURE.md](./ARCHITECTURE.md). OpenAPI contract: [openapi.yaml](./openapi.yaml). Load-test notes: [LOAD_TEST.md](./LOAD_TEST.md). Live proof: [PROOF.md](./PROOF.md).
+Architecture for the 10k audits/day scenario is in [ARCHITECTURE.md](./ARCHITECTURE.md). OpenAPI contract: [openapi.yaml](./openapi.yaml). Live proof: [PROOF.md](./PROOF.md).
 
 ---
 

@@ -108,11 +108,17 @@ Result:
 - Build passed.
 - 145 tests passed across 7 files.
 
-Coverage evidence is recorded in [LOAD_TEST.md](./LOAD_TEST.md):
+Coverage evidence:
 
 - 95.44% statements
 - 87.73% branches
 - 93.68% functions
+
+Burst-test runner:
+
+- GitHub repo path: `scripts/load-test.mjs`
+- Command: `PAGE_PULSE_BASE_URL=http://127.0.0.1:3000 PAGE_PULSE_LOAD_TOTAL=20 PAGE_PULSE_LOAD_CONCURRENCY=5 npm run load:test`
+- Purpose: checks that a short concurrent burst completes successfully while preserving the service's structured response behavior.
 
 ---
 
