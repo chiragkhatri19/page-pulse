@@ -35,9 +35,13 @@ That is the thesis. Everything below serves it.
 
 ## 1. Architecture
 
-### Mermaid diagram
+### Architecture diagram
 
-GitHub renders the diagram below. The standalone Mermaid source is also included in [ARCHITECTURE_DIAGRAM.mmd](./ARCHITECTURE_DIAGRAM.mmd) for reviewers opening the packet in a viewer that does not render Mermaid blocks.
+The visible SVG diagram is included as [ARCHITECTURE_DIAGRAM.svg](./ARCHITECTURE_DIAGRAM.svg). It previews in GitHub and common file viewers. The Mermaid source is also included in [ARCHITECTURE_DIAGRAM.mmd](./ARCHITECTURE_DIAGRAM.mmd).
+
+![pagepulse.run scale architecture](./ARCHITECTURE_DIAGRAM.svg)
+
+### Mermaid source
 
 ```mermaid
 flowchart TB

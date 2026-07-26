@@ -22,8 +22,9 @@ The important part is not the scoring UI. The important part is the production b
 3. Scan it again and check that the second response is cached.
 4. Scan `http://169.254.169.254/latest/meta-data/` and confirm it returns `422 URL_NOT_ALLOWED`.
 5. Open [PROOF.md](./PROOF.md) for live verification evidence.
-6. Open [ARCHITECTURE.md](./ARCHITECTURE.md) for the 10,000 audits/day and 500-concurrent-request design.
-7. Open [README.md](./README.md) for the API contract.
+6. Open [ARCHITECTURE_DIAGRAM.svg](./ARCHITECTURE_DIAGRAM.svg) for the architecture at a glance.
+7. Open [ARCHITECTURE.md](./ARCHITECTURE.md) for the 10,000 audits/day and 500-concurrent-request design.
+8. Open [README.md](./README.md) for the API contract.
 
 ## What to notice
 

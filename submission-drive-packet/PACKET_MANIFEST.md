@@ -11,6 +11,7 @@ This folder is the Drive-ready review packet. The source of truth for code remai
 | `SUBMISSION.md` | Task A and Task B evidence, assumptions, AI usage and checklist. |
 | `README.md` | API contract, configuration, design notes, testing and repo layout. |
 | `ARCHITECTURE.md` | Scale design for 10,000 audits/day, 500 concurrent bursts and SLA handling. |
+| `ARCHITECTURE_DIAGRAM.svg` | Visible architecture diagram for Drive/GitHub preview. |
 | `ARCHITECTURE_DIAGRAM.mmd` | Standalone Mermaid architecture diagram source. |
 | `EVALUATOR_GUIDE.md` | Short technical guide for fast assessment. |
 | `PROOF.md` | Live checks, CI proof, cache proof, SSRF proof and coverage numbers. |
