@@ -8,6 +8,7 @@ This is the fastest path through the submission if you are reviewing several ent
 - Repository: https://github.com/chiragkhatri19/page-pulse
 - API contract: [README.md](./README.md)
 - Scale design: [ARCHITECTURE.md](./ARCHITECTURE.md)
+- Drive-visible architecture PDF: [ARCHITECTURE.pdf](./ARCHITECTURE.pdf)
 - Verification proof: [PROOF.md](./PROOF.md)
 
 ## What to try first

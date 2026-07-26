@@ -14,6 +14,7 @@ Role: Software Development (SDE)
 - API contract: README.md
 - OpenAPI contract: openapi.yaml
 - Scale architecture: ARCHITECTURE.md
+- Drive-visible architecture PDF: ARCHITECTURE.pdf
 - Visible architecture diagram: ARCHITECTURE_DIAGRAM.png
 - Load-test evidence: LOAD_TEST.md
 - Submission notes: SUBMISSION.md

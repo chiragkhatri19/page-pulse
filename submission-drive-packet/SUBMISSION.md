@@ -9,6 +9,7 @@ Role: Software Development (SDE). Task A and Task B.
 - Evaluator guide: [EVALUATOR_GUIDE.md](./EVALUATOR_GUIDE.md)
 - API contract: [README.md](./README.md)
 - Architecture document: [ARCHITECTURE.md](./ARCHITECTURE.md)
+- Drive-visible architecture PDF: [ARCHITECTURE.pdf](./ARCHITECTURE.pdf)
 - Visible architecture diagram: [ARCHITECTURE_DIAGRAM.png](./ARCHITECTURE_DIAGRAM.png)
 - OpenAPI contract: [openapi.yaml](./openapi.yaml)
 - Load-test evidence: [LOAD_TEST.md](./LOAD_TEST.md)
