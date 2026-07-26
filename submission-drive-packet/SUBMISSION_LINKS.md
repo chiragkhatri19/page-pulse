@@ -15,10 +15,8 @@ Role: Software Development (SDE)
 - OpenAPI contract: openapi.yaml
 - Scale architecture: ARCHITECTURE.md
 - Visible architecture diagram: ARCHITECTURE_DIAGRAM.svg
-- Standalone Mermaid diagram: ARCHITECTURE_DIAGRAM.mmd
 - Load-test evidence: LOAD_TEST.md
 - Submission notes: SUBMISSION.md
-- Custom domain plan: CUSTOM_DOMAIN.md
 
 ## Quick reviewer path
 

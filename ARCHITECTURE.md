@@ -37,50 +37,9 @@ That is the thesis. Everything below serves it.
 
 ### Architecture diagram
 
-The visible SVG diagram is included as [ARCHITECTURE_DIAGRAM.svg](./ARCHITECTURE_DIAGRAM.svg). It previews in GitHub and common file viewers. The Mermaid source is also included in [ARCHITECTURE_DIAGRAM.mmd](./ARCHITECTURE_DIAGRAM.mmd).
+The diagram is included as a visible SVG so it previews in GitHub, Drive and common file viewers. It is intentionally sparse: the architecture details live in the sections below, while the diagram gives a reviewer the system shape in one pass.
 
 ![pagepulse.run scale architecture](./ARCHITECTURE_DIAGRAM.svg)
-
-### Mermaid source
-
-```mermaid
-flowchart TB
-    subgraph Edge
-        CDN["CDN / Cloudflare<br/>TLS, WAF, IP rate limit<br/>caches GET /v1/audit"]
-        LB["Load balancer<br/>health-checks /readyz"]
-    end
-
-    subgraph API["API tier — stateless, 3 to 6 replicas, autoscaled"]
-        A1["page-pulse api<br/>validate → SSRF guard → rate limit<br/>cache read → single-flight → fetch<br/>5s deadline"]
-    end
-
-    subgraph State["State"]
-        R[("Redis<br/>report cache (TTL)<br/>rate-limit counters<br/>single-flight locks<br/>job status")]
-        Q[["Redis Streams / BullMQ<br/>audits queue + DLQ"]]
-        PG[("Postgres<br/>audit history, API keys,<br/>usage for billing")]
-    end
-
-    subgraph Workers["Worker tier — 2 to 10 replicas, scales on queue depth"]
-        W1["audit worker<br/>same audit core as the API<br/>longer budget, retries"]
-    end
-
-    subgraph Obs["Observability"]
-        O["OpenTelemetry collector<br/>→ Prometheus, Loki, Tempo<br/>→ Grafana, PagerDuty"]
-    end
-
-    Client --> CDN --> LB --> A1
-    A1 -- "read/write report cache<br/>consume tokens" --> R
-    A1 -- "enqueue on deadline<br/>or async submit" --> Q
-    A1 -- "write audit record" --> PG
-    Q --> W1
-    W1 -- "write report, mark job done" --> R
-    W1 -- "persist history" --> PG
-    W1 -- "webhook callback" --> Client
-    A1 -.-> O
-    W1 -.-> O
-    A1 == "outbound HTTPS<br/>via egress NAT pool" ==> Internet[("Target websites")]
-    W1 == "outbound HTTPS" ==> Internet
-```
 
 ### Components
 

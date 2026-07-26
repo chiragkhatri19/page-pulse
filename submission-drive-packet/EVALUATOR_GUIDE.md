@@ -9,7 +9,6 @@ This is the fastest path through the submission if you are reviewing several ent
 - API contract: [README.md](./README.md)
 - Scale design: [ARCHITECTURE.md](./ARCHITECTURE.md)
 - Verification proof: [PROOF.md](./PROOF.md)
-- Custom domain plan: [CUSTOM_DOMAIN.md](./CUSTOM_DOMAIN.md)
 
 ## What to try first
 

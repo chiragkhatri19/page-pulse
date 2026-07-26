@@ -7,7 +7,7 @@ CI: ![CI](https://github.com/chiragkhatri19/page-pulse/actions/workflows/ci.yml/
 
 Built for the Digital Heroes training task. Start with [EVALUATOR_GUIDE.md](./EVALUATOR_GUIDE.md) if you are reviewing the submission.
 
-Architecture for the 10k audits/day scenario is in [ARCHITECTURE.md](./ARCHITECTURE.md). OpenAPI contract: [openapi.yaml](./openapi.yaml). Load-test notes: [LOAD_TEST.md](./LOAD_TEST.md). Live proof: [PROOF.md](./PROOF.md). Custom domain plan: [CUSTOM_DOMAIN.md](./CUSTOM_DOMAIN.md).
+Architecture for the 10k audits/day scenario is in [ARCHITECTURE.md](./ARCHITECTURE.md). OpenAPI contract: [openapi.yaml](./openapi.yaml). Load-test notes: [LOAD_TEST.md](./LOAD_TEST.md). Live proof: [PROOF.md](./PROOF.md).
 
 ---
 
@@ -26,7 +26,7 @@ It is a single stateless HTTP service. One request in, one report out:
 
 ```bash
 npm install
-cp .env.example .env
+cp .env.example .env        # in the GitHub repo
 npm run dev            # http://localhost:3000
 npm test               # 145 tests
 npm run test:coverage  # enforces 90% statements / 85% functions / 80% branches
@@ -238,7 +238,7 @@ curl -X POST https://page-pulse-9riw.onrender.com/v1/audit \
 
 ## Configuration
 
-Every knob is environment-driven and validated at boot with Zod. A malformed value fails startup loudly rather than silently defaulting. Full list in [.env.example](./.env.example).
+Every knob is environment-driven and validated at boot with Zod. A malformed value fails startup loudly rather than silently defaulting. The full `.env.example` lives in the GitHub repo.
 
 | Variable | Default | Purpose |
 | --- | --- | --- |

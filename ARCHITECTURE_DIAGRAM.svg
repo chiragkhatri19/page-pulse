@@ -1,137 +1,155 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="980" viewBox="0 0 1600 980" role="img" aria-labelledby="title desc">
-  <title id="title">pagepulse.run scale architecture</title>
-  <desc id="desc">Architecture diagram for a URL audit service handling 10000 audits per day with 500 concurrent request bursts.</desc>
+<svg xmlns="http://www.w3.org/2000/svg" width="1440" height="920" viewBox="0 0 1440 920" role="img" aria-labelledby="title desc">
+  <title id="title">Page Pulse scale architecture</title>
+  <desc id="desc">A production architecture for Page Pulse showing edge protection, API replicas, Redis state, worker queues, durable storage, target websites, observability, and rollback controls.</desc>
   <defs>
-    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
-      <path d="M2,2 L10,6 L2,10 Z" fill="#263026"/>
-    </marker>
-    <marker id="softArrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto" markerUnits="strokeWidth">
-      <path d="M2,2 L10,6 L2,10 Z" fill="#7a6d59"/>
-    </marker>
-    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#4c3e26" flood-opacity="0.16"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f7f3ea"/>
+      <stop offset="0.48" stop-color="#eef3ef"/>
+      <stop offset="1" stop-color="#f3eee5"/>
+    </linearGradient>
+    <filter id="grain" x="-20%" y="-20%" width="140%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="11" result="noise"/>
+      <feColorMatrix in="noise" type="saturate" values="0"/>
+      <feComponentTransfer>
+        <feFuncA type="table" tableValues="0 0.08"/>
+      </feComponentTransfer>
+      <feBlend in="SourceGraphic" mode="multiply"/>
     </filter>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="14" stdDeviation="18" flood-color="#1f2a24" flood-opacity="0.14"/>
+    </filter>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2 2 L10 6 L2 10 Z" fill="#2f3a34"/>
+    </marker>
     <style>
-      .bg { fill: #f4efe5; }
-      .grid { stroke: #d7cbb8; stroke-width: 1; opacity: 0.38; }
-      .panel { fill: rgba(255,252,244,0.84); stroke: #bfb39f; stroke-width: 1.5; rx: 22; filter: url(#shadow); }
-      .group { fill: rgba(255,252,244,0.48); stroke: #d0c4af; stroke-width: 1.2; rx: 28; }
-      .state { fill: #eef5ef; stroke: #84a58f; }
-      .queue { fill: #fff7df; stroke: #c49a38; }
-      .danger { fill: #fff0ec; stroke: #c96b55; }
-      .obs { fill: #eef1f5; stroke: #8798aa; }
-      .title { font: 700 38px Georgia, serif; fill: #161812; }
-      .subtitle { font: 500 17px Arial, sans-serif; fill: #596052; }
-      .label { font: 700 18px Arial, sans-serif; fill: #161812; }
-      .small { font: 500 14px Arial, sans-serif; fill: #596052; }
-      .tiny { font: 500 12px Arial, sans-serif; fill: #6f7569; }
-      .mono { font: 600 13px Consolas, monospace; fill: #596052; }
-      .accent { fill: #b93a2f; }
-      .arrow { stroke: #263026; stroke-width: 2.4; fill: none; marker-end: url(#arrow); }
-      .softArrow { stroke: #7a6d59; stroke-width: 2; fill: none; stroke-dasharray: 7 7; marker-end: url(#softArrow); }
-      .lane { stroke: #d6c7ae; stroke-width: 1.2; stroke-dasharray: 5 7; }
-      .badge { fill: #161812; rx: 14; }
-      .badgeText { font: 700 12px Consolas, monospace; fill: #f4efe5; letter-spacing: 1px; }
+      .bg { fill: url(#bg); }
+      .frame { fill: #fffaf0; stroke: #24312a; stroke-width: 1.4; }
+      .card { fill: #fffdf6; stroke: #24312a; stroke-width: 1.35; filter: url(#softShadow); }
+      .state { fill: #ecf6ef; }
+      .risk { fill: #fff0df; }
+      .obs { fill: #edf2ff; }
+      .title { font: 700 54px Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial; fill: #16221c; letter-spacing: 0; }
+      .subtitle { font: 500 19px Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial; fill: #53645a; letter-spacing: 0; }
+      .label { font: 800 22px Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial; fill: #16221c; letter-spacing: 0; }
+      .small { font: 500 15px Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial; fill: #46564d; letter-spacing: 0; }
+      .tiny { font: 700 12px Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial; fill: #6a786f; letter-spacing: 1px; }
+      .num { font: 800 18px Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial; fill: #16221c; }
+      .line { fill: none; stroke: #2f3a34; stroke-width: 2.2; marker-end: url(#arrow); }
+      .softLine { fill: none; stroke: #67756c; stroke-width: 1.7; stroke-dasharray: 7 8; marker-end: url(#arrow); }
+      .badge { fill: #1b2a22; }
+      .badgeText { font: 800 13px Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Arial; fill: #fffaf0; letter-spacing: 0; }
     </style>
   </defs>
 
-  <rect class="bg" width="1600" height="980"/>
-  <g opacity="0.8">
-    <path class="grid" d="M80 0 V980 M160 0 V980 M240 0 V980 M320 0 V980 M400 0 V980 M480 0 V980 M560 0 V980 M640 0 V980 M720 0 V980 M800 0 V980 M880 0 V980 M960 0 V980 M1040 0 V980 M1120 0 V980 M1200 0 V980 M1280 0 V980 M1360 0 V980 M1440 0 V980 M1520 0 V980"/>
-    <path class="grid" d="M0 80 H1600 M0 160 H1600 M0 240 H1600 M0 320 H1600 M0 400 H1600 M0 480 H1600 M0 560 H1600 M0 640 H1600 M0 720 H1600 M0 800 H1600 M0 880 H1600 M0 960 H1600"/>
+  <rect class="bg" width="1440" height="920"/>
+  <rect x="26" y="26" width="1388" height="868" rx="34" class="frame" opacity="0.94"/>
+  <rect width="1440" height="920" filter="url(#grain)" opacity="0.55"/>
+
+  <text x="74" y="92" class="tiny">PAGEPULSE.RUN / TASK B</text>
+  <text x="74" y="154" class="title">Production architecture for bursty URL audits</text>
+  <text x="76" y="190" class="subtitle">Synchronous for cache hits and fast origins. Converts slow origins to queued work without breaking the SLA.</text>
+
+  <g transform="translate(76 250)">
+    <rect width="180" height="118" rx="18" class="card"/>
+    <text x="24" y="42" class="label">Client</text>
+    <text x="24" y="72" class="small">Browser, API user</text>
+    <text x="24" y="96" class="small">or scheduled audit</text>
   </g>
 
-  <text x="78" y="78" class="title">pagepulse.run scale architecture</text>
-  <text x="80" y="112" class="subtitle">10,000 audits/day is small on average. The design is built for 500-concurrent bursts, slow third-party origins, and abuse-safe outbound traffic.</text>
-  <rect x="80" y="135" width="205" height="30" class="badge"/>
-  <text x="96" y="155" class="badgeText">SDE TASK B DIAGRAM</text>
+  <g transform="translate(296 250)">
+    <rect width="200" height="118" rx="18" class="card risk"/>
+    <text x="24" y="42" class="label">Edge</text>
+    <text x="24" y="72" class="small">TLS, WAF, IP limits</text>
+    <text x="24" y="96" class="small">and CDN cache</text>
+  </g>
 
-  <rect x="72" y="198" width="230" height="206" class="group"/>
-  <text x="96" y="232" class="label">Caller and edge</text>
-  <rect x="102" y="260" width="170" height="54" class="panel"/>
-  <text x="126" y="292" class="label">Client</text>
-  <text x="126" y="312" class="tiny">API user or reviewer</text>
-  <rect x="102" y="334" width="170" height="50" class="panel"/>
-  <text x="126" y="365" class="label">CDN / WAF</text>
-  <text x="126" y="383" class="tiny">TLS, coarse IP limits</text>
+  <g transform="translate(548 230)">
+    <rect width="252" height="158" rx="20" class="card"/>
+    <text x="26" y="45" class="label">API replicas</text>
+    <text x="26" y="78" class="small">Validate URL, SSRF guard</text>
+    <text x="26" y="102" class="small">rate limit, cache lookup</text>
+    <text x="26" y="126" class="small">5 s sync deadline</text>
+  </g>
 
-  <rect x="360" y="198" width="312" height="284" class="group"/>
-  <text x="386" y="232" class="label">Stateless API tier</text>
-  <text x="386" y="254" class="small">3 to 6 replicas, autoscaled</text>
-  <rect x="396" y="286" width="240" height="152" class="panel"/>
-  <text x="420" y="320" class="label">Fastify API</text>
-  <text x="420" y="348" class="small">1. Validate URL</text>
-  <text x="420" y="371" class="small">2. SSRF guard</text>
-  <text x="420" y="394" class="small">3. Rate limit</text>
-  <text x="420" y="417" class="small">4. Cache + single-flight</text>
+  <g transform="translate(856 230)">
+    <rect width="230" height="158" rx="20" class="card state"/>
+    <text x="26" y="45" class="label">Redis state</text>
+    <text x="26" y="78" class="small">Report cache + TTL</text>
+    <text x="26" y="102" class="small">token buckets</text>
+    <text x="26" y="126" class="small">single-flight locks</text>
+  </g>
 
-  <rect x="748" y="198" width="366" height="390" class="group"/>
-  <text x="776" y="232" class="label">Shared state</text>
-  <text x="776" y="254" class="small">Moves Task A in-process state across replicas</text>
-  <rect x="782" y="286" width="290" height="78" class="panel state"/>
-  <text x="810" y="318" class="label">Redis cache</text>
-  <text x="810" y="342" class="small">Report TTL, cache hits, stale refresh</text>
-  <rect x="782" y="386" width="290" height="78" class="panel state"/>
-  <text x="810" y="418" class="label">Redis coordination</text>
-  <text x="810" y="442" class="small">Rate buckets, locks, job status</text>
-  <rect x="782" y="486" width="290" height="78" class="panel"/>
-  <text x="810" y="518" class="label">Postgres</text>
-  <text x="810" y="542" class="small">Audit history, API keys, usage</text>
+  <g transform="translate(1140 230)">
+    <rect width="224" height="158" rx="20" class="card risk"/>
+    <text x="26" y="45" class="label">Target sites</text>
+    <text x="26" y="78" class="small">Outbound HTTPS only</text>
+    <text x="26" y="102" class="small">DNS-pinned fetches</text>
+    <text x="26" y="126" class="small">host-level bulkheads</text>
+  </g>
 
-  <rect x="1184" y="198" width="304" height="226" class="group"/>
-  <text x="1212" y="232" class="label">Worker tier</text>
-  <text x="1212" y="254" class="small">Scales on queue depth</text>
-  <rect x="1222" y="286" width="226" height="94" class="panel queue"/>
-  <text x="1248" y="320" class="label">Audit worker</text>
-  <text x="1248" y="344" class="small">Same audit core</text>
-  <text x="1248" y="365" class="small">Longer budget + retries</text>
+  <path class="line" d="M256 309 H296"/>
+  <path class="line" d="M496 309 H548"/>
+  <path class="line" d="M800 309 H856"/>
+  <path class="line" d="M1086 309 H1140"/>
 
-  <rect x="1184" y="474" width="304" height="114" class="group"/>
-  <text x="1212" y="508" class="label">Durable queue</text>
-  <rect x="1222" y="530" width="226" height="42" class="panel queue"/>
-  <text x="1248" y="557" class="small">Redis Streams / BullMQ + DLQ</text>
+  <g transform="translate(548 470)">
+    <rect width="252" height="144" rx="20" class="card state"/>
+    <text x="26" y="44" class="label">Queue lane</text>
+    <text x="26" y="76" class="small">BullMQ / Redis Streams</text>
+    <text x="26" y="100" class="small">interactive, scheduled, bulk</text>
+    <text x="26" y="124" class="small">bounded backlog + DLQ</text>
+  </g>
 
-  <rect x="74" y="668" width="432" height="192" class="group"/>
-  <text x="102" y="704" class="label">SLA behavior</text>
-  <rect x="104" y="728" width="172" height="42" class="panel state"/>
-  <text x="124" y="755" class="small">Cache hit: p99 &lt; 150 ms</text>
-  <rect x="304" y="728" width="172" height="42" class="panel"/>
-  <text x="324" y="755" class="small">Fast miss: p95 &lt; 3 s</text>
-  <rect x="104" y="790" width="372" height="42" class="panel queue"/>
-  <text x="124" y="817" class="small">Slow origin: return 202 quickly, finish in worker</text>
+  <g transform="translate(856 470)">
+    <rect width="230" height="144" rx="20" class="card"/>
+    <text x="26" y="44" class="label">Workers</text>
+    <text x="26" y="76" class="small">Same audit core</text>
+    <text x="26" y="100" class="small">30 s budget, retries</text>
+    <text x="26" y="124" class="small">webhooks on finish</text>
+  </g>
 
-  <rect x="584" y="668" width="410" height="192" class="group"/>
-  <text x="612" y="704" class="label">Failure controls</text>
-  <text x="614" y="738" class="small">Per-host concurrency caps stop one slow origin from starving others.</text>
-  <text x="614" y="770" class="small">Cross-replica single-flight prevents cache stampedes.</text>
-  <text x="614" y="802" class="small">DNS-pinned fetching closes DNS rebinding windows.</text>
-  <text x="614" y="834" class="small">Target 500 is a scored audit. Service 500 is an outage.</text>
+  <g transform="translate(1140 470)">
+    <rect width="224" height="144" rx="20" class="card state"/>
+    <text x="26" y="44" class="label">Postgres</text>
+    <text x="26" y="76" class="small">Audit history</text>
+    <text x="26" y="100" class="small">API keys and usage</text>
+    <text x="26" y="124" class="small">billing-safe records</text>
+  </g>
 
-  <rect x="1072" y="668" width="416" height="192" class="group"/>
-  <text x="1100" y="704" class="label">Observability and rollback</text>
-  <rect x="1102" y="728" width="160" height="48" class="panel obs"/>
-  <text x="1122" y="758" class="small">OpenTelemetry</text>
-  <rect x="1290" y="728" width="160" height="48" class="panel obs"/>
-  <text x="1310" y="758" class="small">Prom/Loki/Tempo</text>
-  <rect x="1102" y="804" width="348" height="36" class="panel danger"/>
-  <text x="1122" y="827" class="small">Canary deploy, immutable image rollback, PagerDuty alerts</text>
+  <path class="line" d="M674 388 V470"/>
+  <path class="line" d="M800 542 H856"/>
+  <path class="line" d="M1086 542 H1140"/>
+  <path class="line" d="M971 470 V388"/>
+  <path class="line" d="M971 470 C1030 430 1086 388 1140 350"/>
 
-  <rect x="706" y="80" width="330" height="66" class="panel danger"/>
-  <text x="732" y="111" class="label">Target websites</text>
-  <text x="732" y="132" class="small">Third-party latency we do not control</text>
+  <g transform="translate(76 676)">
+    <rect width="354" height="136" rx="20" class="card obs"/>
+    <text x="26" y="44" class="label">Observability</text>
+    <text x="26" y="77" class="small">OpenTelemetry to metrics, logs and traces</text>
+    <text x="26" y="103" class="small">Alerts on SLA, queue age, Redis, SSRF probes</text>
+  </g>
 
-  <path class="arrow" d="M187 314 V334"/>
-  <path class="arrow" d="M272 360 C320 360,342 360,396 360"/>
-  <path class="arrow" d="M636 326 C690 326,724 326,782 326"/>
-  <path class="arrow" d="M636 410 C690 410,724 424,782 424"/>
-  <path class="arrow" d="M1072 424 C1128 424,1160 498,1222 548"/>
-  <path class="arrow" d="M1336 530 V380"/>
-  <path class="arrow" d="M1336 286 C1260 164,1090 112,1036 112"/>
-  <path class="arrow" d="M516 286 C560 150,642 112,706 112"/>
-  <path class="arrow" d="M1290 752 H1262"/>
-  <path class="softArrow" d="M516 438 C610 610,720 668,790 668"/>
-  <path class="softArrow" d="M1336 380 C1324 478,1310 596,1280 668"/>
+  <g transform="translate(474 676)">
+    <rect width="394" height="136" rx="20" class="card risk"/>
+    <text x="26" y="44" class="label">SLA policy</text>
+    <text x="26" y="77" class="small">Cache hit p99 &lt; 150 ms. Fast miss p95 &lt; 3 s.</text>
+    <text x="26" y="103" class="small">Slow origin returns 202 quickly and finishes async.</text>
+  </g>
 
-  <line x1="52" y1="630" x2="1548" y2="630" class="lane"/>
-  <text x="80" y="645" class="mono">Below the line: why the architecture is shaped this way</text>
+  <g transform="translate(912 676)">
+    <rect width="452" height="136" rx="20" class="card"/>
+    <text x="26" y="44" class="label">Release safety</text>
+    <text x="26" y="77" class="small">Immutable image tags, canary rollout, previous-SHA rollback</text>
+    <text x="26" y="103" class="small">Versioned cache and queue messages keep rollback possible.</text>
+  </g>
+
+  <path class="softLine" d="M674 388 C520 472 364 592 253 676"/>
+  <path class="softLine" d="M674 388 C666 492 666 588 670 676"/>
+  <path class="softLine" d="M971 388 C995 506 1064 598 1138 676"/>
+
+  <g transform="translate(76 842)">
+    <rect class="badge" x="0" y="-28" width="250" height="38" rx="19"/>
+    <text x="20" y="-4" class="badgeText">Built for Digital Heroes Training Task</text>
+    <text x="1110" y="-4" class="tiny">10K AUDITS/DAY • 500 CONCURRENT BURST • CUSTOMER-FACING SLA</text>
+  </g>
 </svg>

@@ -7,7 +7,7 @@ CI: ![CI](https://github.com/chiragkhatri19/page-pulse/actions/workflows/ci.yml/
 
 Built for the Digital Heroes training task. Start with [EVALUATOR_GUIDE.md](./EVALUATOR_GUIDE.md) if you are reviewing the submission.
 
-Architecture for the 10k audits/day scenario is in [ARCHITECTURE.md](./ARCHITECTURE.md). OpenAPI contract: [openapi.yaml](./openapi.yaml). Load-test notes: [LOAD_TEST.md](./LOAD_TEST.md). Live proof: [PROOF.md](./PROOF.md). Custom domain plan: [CUSTOM_DOMAIN.md](./CUSTOM_DOMAIN.md).
+Architecture for the 10k audits/day scenario is in [ARCHITECTURE.md](./ARCHITECTURE.md). OpenAPI contract: [openapi.yaml](./openapi.yaml). Load-test notes: [LOAD_TEST.md](./LOAD_TEST.md). Live proof: [PROOF.md](./PROOF.md).
 
 ---
 

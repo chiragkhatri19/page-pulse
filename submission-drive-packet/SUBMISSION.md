@@ -10,11 +10,9 @@ Role: Software Development (SDE). Task A and Task B.
 - API contract: [README.md](./README.md)
 - Architecture document: [ARCHITECTURE.md](./ARCHITECTURE.md)
 - Visible architecture diagram: [ARCHITECTURE_DIAGRAM.svg](./ARCHITECTURE_DIAGRAM.svg)
-- Standalone Mermaid diagram: [ARCHITECTURE_DIAGRAM.mmd](./ARCHITECTURE_DIAGRAM.mmd)
 - OpenAPI contract: [openapi.yaml](./openapi.yaml)
 - Load-test evidence: [LOAD_TEST.md](./LOAD_TEST.md)
 - Verification proof: [PROOF.md](./PROOF.md)
-- Custom domain plan: [CUSTOM_DOMAIN.md](./CUSTOM_DOMAIN.md)
 
 ## What I built
 
@@ -45,7 +43,7 @@ The live build also includes a small browser UI so the reviewer can try the API 
 
 `ARCHITECTURE.md` covers:
 
-- Components, data flow, queueing strategy and state ownership, with a Mermaid diagram.
+- Components, data flow, queueing strategy and state ownership, with a visible SVG diagram.
 - Technology decision record with rejected alternatives for each major choice.
 - Three likely failure modes at scale, ranked by probability and blast radius.
 - Monitoring, alerting, canary deploys and rollback strategy.
@@ -100,7 +98,6 @@ Additional checks already performed:
 - [x] Load-test evidence exists.
 - [x] Evaluator guide exists.
 - [x] Live proof document exists.
-- [x] Custom domain plan exists for `scan.chiragships.site`.
 - [x] Required footer credit exists on the live page.
 - [x] Local typecheck passes.
 - [x] Local tests pass.
