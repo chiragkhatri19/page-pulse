@@ -1,0 +1,510 @@
+openapi: 3.0.3
+info:
+  title: Page Pulse API
+  version: 1.0.0
+  description: Production-grade URL audit API for scoring public pages across SEO, accessibility, performance and security signals.
+servers:
+  - url: https://page-pulse-9riw.onrender.com
+    description: Live Render deployment
+  - url: http://localhost:3000
+    description: Local development
+tags:
+  - name: Audit
+  - name: Health
+  - name: Operations
+paths:
+  /v1/audit:
+    post:
+      tags: [Audit]
+      summary: Audit a public URL
+      operationId: auditUrl
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuditRequest'
+            examples:
+              example:
+                value:
+                  url: https://example.com
+      responses:
+        '200':
+          description: Audit completed successfully
+          headers:
+            x-request-id:
+              $ref: '#/components/headers/RequestId'
+            x-cache:
+              $ref: '#/components/headers/CacheResult'
+            x-cache-age:
+              $ref: '#/components/headers/CacheAge'
+            x-ratelimit-limit:
+              $ref: '#/components/headers/RateLimitLimit'
+            x-ratelimit-remaining:
+              $ref: '#/components/headers/RateLimitRemaining'
+            x-ratelimit-reset:
+              $ref: '#/components/headers/RateLimitReset'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditResponse'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '413':
+          $ref: '#/components/responses/TargetTooLarge'
+        '415':
+          $ref: '#/components/responses/UnsupportedContentType'
+        '422':
+          $ref: '#/components/responses/UrlNotAllowed'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '502':
+          $ref: '#/components/responses/TargetUnreachable'
+        '503':
+          $ref: '#/components/responses/CapacityExceeded'
+        '504':
+          $ref: '#/components/responses/TargetTimeout'
+    get:
+      tags: [Audit]
+      summary: Audit a public URL using query parameters
+      operationId: auditUrlByQuery
+      parameters:
+        - $ref: '#/components/parameters/RequestId'
+        - name: url
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 2048
+          example: example.com
+        - name: fresh
+          in: query
+          required: false
+          schema:
+            type: boolean
+          example: true
+        - name: ttlSeconds
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            maximum: 86400
+      responses:
+        '200':
+          description: Audit completed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditResponse'
+        '400':
+          $ref: '#/components/responses/ValidationFailed'
+        '422':
+          $ref: '#/components/responses/UrlNotAllowed'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+        '502':
+          $ref: '#/components/responses/TargetUnreachable'
+        '503':
+          $ref: '#/components/responses/CapacityExceeded'
+        '504':
+          $ref: '#/components/responses/TargetTimeout'
+  /healthz:
+    get:
+      tags: [Health]
+      summary: Liveness probe
+      operationId: healthz
+      responses:
+        '200':
+          description: Service process is alive
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, uptimeSeconds]
+                properties:
+                  status:
+                    type: string
+                    enum: [ok]
+                  uptimeSeconds:
+                    type: number
+  /readyz:
+    get:
+      tags: [Health]
+      summary: Readiness probe
+      operationId: readyz
+      responses:
+        '200':
+          description: Service can accept audit work
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadyResponse'
+        '503':
+          description: Service is saturated and should be removed from load balancing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SaturatedResponse'
+  /v1/stats:
+    get:
+      tags: [Operations]
+      summary: Runtime counters
+      operationId: stats
+      responses:
+        '200':
+          description: Cache, concurrency, rate-limit and memory counters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatsResponse'
+components:
+  parameters:
+    RequestId:
+      name: x-request-id
+      in: header
+      required: false
+      schema:
+        type: string
+        maxLength: 128
+      description: Optional caller-supplied request ID echoed in responses and logs.
+  headers:
+    RequestId:
+      schema:
+        type: string
+      description: Request ID minted by Page Pulse or echoed from the caller.
+    CacheResult:
+      schema:
+        type: string
+        enum: [HIT, MISS]
+      description: Whether the report came from cache.
+    CacheAge:
+      schema:
+        type: integer
+        minimum: 0
+      description: Age of the served cache entry in seconds.
+    RateLimitLimit:
+      schema:
+        type: integer
+      description: Token bucket capacity for the client.
+    RateLimitRemaining:
+      schema:
+        type: integer
+      description: Tokens left after this request.
+    RateLimitReset:
+      schema:
+        type: integer
+      description: Unix timestamp when the bucket is expected to be full again.
+    RetryAfter:
+      schema:
+        type: integer
+        minimum: 1
+      description: Seconds to wait before retrying.
+  responses:
+    ValidationFailed:
+      description: Request validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UrlNotAllowed:
+      description: Target URL resolves to a private, loopback, link-local or reserved address
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    RateLimited:
+      description: Client rate limit exceeded
+      headers:
+        retry-after:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    CapacityExceeded:
+      description: Global or per-host audit capacity is exhausted
+      headers:
+        retry-after:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    TargetTimeout:
+      description: Target accepted the connection but stalled past the audit timeout
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    TargetTooLarge:
+      description: Target response exceeded the configured body cap
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    UnsupportedContentType:
+      description: Target returned a non-HTML document
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    TargetUnreachable:
+      description: DNS, connection or target-health failure
+      headers:
+        retry-after:
+          $ref: '#/components/headers/RetryAfter'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    AuditRequest:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+          minLength: 1
+          maxLength: 2048
+          description: Public http or https URL. Bare hostnames are upgraded to https.
+        fresh:
+          type: boolean
+          default: false
+          description: Bypass cache and refresh the stored entry.
+        ttlSeconds:
+          type: integer
+          minimum: 0
+          maximum: 86400
+          description: Per-request cache TTL override, clamped by server config.
+    AuditResponse:
+      type: object
+      required: [requestId, cache, durationMs, report]
+      properties:
+        requestId:
+          type: string
+        cache:
+          $ref: '#/components/schemas/CacheMeta'
+        durationMs:
+          type: integer
+          minimum: 0
+        report:
+          $ref: '#/components/schemas/AuditReport'
+    CacheMeta:
+      type: object
+      required: [hit, ageSeconds, ttlSeconds, deduped]
+      properties:
+        hit:
+          type: boolean
+        ageSeconds:
+          type: integer
+          minimum: 0
+        ttlSeconds:
+          type: integer
+          minimum: 0
+        deduped:
+          type: boolean
+    AuditReport:
+      type: object
+      required: [url, finalUrl, redirected, fetchedAt, http, score, facts, checks]
+      properties:
+        url:
+          type: string
+          format: uri
+        finalUrl:
+          type: string
+          format: uri
+        redirected:
+          type: boolean
+        fetchedAt:
+          type: string
+          format: date-time
+        http:
+          $ref: '#/components/schemas/HttpFacts'
+        score:
+          $ref: '#/components/schemas/Score'
+        facts:
+          type: object
+          additionalProperties: true
+        checks:
+          type: array
+          items:
+            $ref: '#/components/schemas/CheckResult'
+    HttpFacts:
+      type: object
+      required: [status, contentType, bytes, truncated, ttfbMs, totalMs]
+      properties:
+        status:
+          type: integer
+        contentType:
+          type: string
+          nullable: true
+        bytes:
+          type: integer
+          minimum: 0
+        truncated:
+          type: boolean
+        ttfbMs:
+          type: integer
+          minimum: 0
+        totalMs:
+          type: integer
+          minimum: 0
+    Score:
+      type: object
+      required: [overall, grade, pillars, recommendations]
+      properties:
+        overall:
+          type: integer
+          minimum: 0
+          maximum: 100
+        grade:
+          type: string
+          enum: [A, B, C, D, F]
+        pillars:
+          type: object
+          required: [seo, accessibility, performance, security]
+          properties:
+            seo:
+              $ref: '#/components/schemas/PillarScore'
+            accessibility:
+              $ref: '#/components/schemas/PillarScore'
+            performance:
+              $ref: '#/components/schemas/PillarScore'
+            security:
+              $ref: '#/components/schemas/PillarScore'
+        recommendations:
+          type: array
+          items:
+            $ref: '#/components/schemas/Recommendation'
+    PillarScore:
+      type: object
+      required: [score, earned, possible, grade, failedChecks]
+      properties:
+        score:
+          type: integer
+          minimum: 0
+          maximum: 100
+        earned:
+          type: number
+        possible:
+          type: number
+        grade:
+          type: string
+          enum: [A, B, C, D, F]
+        failedChecks:
+          type: integer
+          minimum: 0
+    Recommendation:
+      type: object
+      required: [checkId, pillar, title, detail, impact]
+      properties:
+        checkId:
+          type: string
+        pillar:
+          type: string
+          enum: [seo, accessibility, performance, security]
+        title:
+          type: string
+        detail:
+          type: string
+        impact:
+          type: string
+          enum: [high, medium, low]
+    CheckResult:
+      allOf:
+        - $ref: '#/components/schemas/Recommendation'
+        - type: object
+          required: [id, label, passed, weight]
+          properties:
+            id:
+              type: string
+            label:
+              type: string
+            passed:
+              type: boolean
+            weight:
+              type: number
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, requestId]
+          properties:
+            code:
+              type: string
+              enum:
+                - VALIDATION_FAILED
+                - URL_NOT_ALLOWED
+                - TARGET_UNREACHABLE
+                - TARGET_TIMEOUT
+                - TARGET_TOO_LARGE
+                - UNSUPPORTED_CONTENT_TYPE
+                - RATE_LIMITED
+                - CAPACITY_EXCEEDED
+                - NOT_FOUND
+                - INTERNAL
+            message:
+              type: string
+            requestId:
+              type: string
+            details:
+              nullable: true
+            retryAfterSeconds:
+              type: integer
+              minimum: 1
+    ReadyResponse:
+      type: object
+      required: [status, inFlight, queueDepth]
+      properties:
+        status:
+          type: string
+          enum: [ready]
+        inFlight:
+          type: integer
+        queueDepth:
+          type: integer
+    SaturatedResponse:
+      type: object
+      required: [status, queueDepth]
+      properties:
+        status:
+          type: string
+          enum: [saturated]
+        queueDepth:
+          type: integer
+    StatsResponse:
+      type: object
+      additionalProperties: true
+      properties:
+        uptimeSeconds:
+          type: integer
+        cache:
+          type: object
+        concurrency:
+          type: object
+          properties:
+            limit:
+              type: integer
+            perHostLimit:
+              type: integer
+            inFlight:
+              type: integer
+            queueDepth:
+              type: integer
+            hosts:
+              type: object
+              properties:
+                trackedHosts:
+                  type: integer
+                openCircuits:
+                  type: integer
+        rateLimit:
+          type: object
+        memory:
+          type: object

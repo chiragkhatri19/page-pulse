@@ -1,0 +1,29 @@
+services:
+  - type: web
+    name: page-pulse
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /healthz
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: LOG_LEVEL
+        value: info
+      - key: CACHE_TTL_SECONDS
+        value: "300"
+      - key: RATE_LIMIT_MAX
+        value: "30"
+      - key: RATE_LIMIT_WINDOW_SECONDS
+        value: "60"
+      - key: MAX_CONCURRENT_AUDITS
+        value: "25"
+      - key: MAX_CONCURRENT_AUDITS_PER_HOST
+        value: "4"
+      - key: HOST_CIRCUIT_FAILURE_THRESHOLD
+        value: "5"
+      - key: HOST_CIRCUIT_COOLDOWN_MS
+        value: "60000"
+      - key: AUDIT_TIMEOUT_MS
+        value: "8000"
