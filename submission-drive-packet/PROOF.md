@@ -1,6 +1,8 @@
 # Verification proof
 
-Last updated: 2026-07-25.
+Snapshot recorded: 2026-07-25.
+
+This file is intentionally evidence-focused: commands, observed behavior and the numbers I would expect a reviewer to verify independently.
 
 ## CI
 
@@ -9,7 +11,7 @@ Last updated: 2026-07-25.
 - Status: `success`
 - Workflow: `CI`
 
-The workflow runs typecheck, coverage tests on Node 20 and 22, build, Docker image build, and a container smoke test.
+The workflow is not just a unit-test runner. It runs typecheck, coverage tests on Node 20 and 22, build, Docker image build, and a container smoke test that exercises a real audit path.
 
 ## Live checks
 
@@ -118,7 +120,7 @@ Burst-test runner:
 
 - GitHub repo path: `scripts/load-test.mjs`
 - Command: `PAGE_PULSE_BASE_URL=http://127.0.0.1:3000 PAGE_PULSE_LOAD_TOTAL=20 PAGE_PULSE_LOAD_CONCURRENCY=5 npm run load:test`
-- Purpose: checks that a short concurrent burst completes successfully while preserving the service's structured response behavior.
+- Purpose: checks that a short concurrent burst completes successfully while preserving structured responses and request timing.
 
 ---
 

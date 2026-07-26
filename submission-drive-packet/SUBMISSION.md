@@ -9,15 +9,14 @@ Role: Software Development (SDE). Task A and Task B.
 - API contract: [README.md](./README.md)
 - Architecture document: [ARCHITECTURE.md](./ARCHITECTURE.md)
 - Drive-visible architecture PDF: [ARCHITECTURE.pdf](./ARCHITECTURE.pdf)
-- Visible architecture diagram: [ARCHITECTURE_DIAGRAM.png](./ARCHITECTURE_DIAGRAM.png)
 - OpenAPI contract: [openapi.yaml](./openapi.yaml)
 - Verification proof: [PROOF.md](./PROOF.md)
 
-## What I built
+## Reviewer thesis
 
-pagepulse.run is a production-grade URL audit service. A client submits a public URL, the service validates it, guards against SSRF, fetches the page under strict timeouts, parses the HTML and response headers, and returns a scored JSON report across SEO, accessibility, performance and security.
+Most URL-audit demos are just `fetch(url)` plus a score. I treated the URL as attacker-controlled infrastructure input. That changes the shape of the project: SSRF protection, DNS pinning, redirect revalidation, request deadlines, bounded concurrency, cache dedupe, rate limits and structured error contracts become core product behavior, not cleanup work.
 
-The live build also includes a small browser UI so the reviewer can try the API without writing curl commands. The footer includes the required visible credit line linked to `digitalheroesco.com`.
+The live build still has a simple browser UI so the reviewer can try the API quickly. The API is the real deliverable.
 
 ## Task A evidence
 
@@ -42,12 +41,12 @@ The live build also includes a small browser UI so the reviewer can try the API 
 
 `ARCHITECTURE.md` covers:
 
-- Components, data flow, queueing strategy and state ownership, with a visible SVG diagram.
+- Components, data flow, queueing strategy and state ownership, with a visible diagram in `ARCHITECTURE.pdf`.
 - Technology decision record with rejected alternatives for each major choice.
 - Three likely failure modes at scale, ranked by probability and blast radius.
 - Monitoring, alerting, canary deploys and rollback strategy.
 
-The main architectural decision is that the SLA has to be tiered. A cache hit can have a tight latency promise because it is our work. A cache miss depends on a third-party origin, so the scale design enforces a deadline and converts slow misses to async jobs rather than pretending we can control another server's response time.
+The scale document starts with the number most submissions skip: 10,000 audits/day is only about 0.12 requests per second on average. The hard part is not average throughput. The hard part is a 500-request burst aimed at third-party websites we do not control. That is why the design centers on single-flight caching, host bulkheads, deadline-based async conversion and explicit backpressure.
 
 ## Assumptions I made
 
@@ -63,9 +62,9 @@ The main architectural decision is that the SLA has to be tiered. A cache hit ca
 
 ## Where I used AI
 
-I used AI heavily as an implementation accelerator and as a reviewer, but I made the architectural calls myself and pushed back on several first drafts. The clearest example is Task B: I rejected a generic "scale the API horizontally" answer after doing the math that 10,000 audits per day is only about 0.12 requests per second on average. The real problem is burst shape and third-party latency, which is why the architecture centers on caching, single-flight, bounded concurrency and async conversion for slow origins.
+I used AI as an implementation accelerator and as a reviewer, not as the decision-maker. One useful moment was rejecting the generic "scale the API horizontally" answer after doing the traffic math. Another was using AI to attack the SSRF design, which exposed a DNS rebinding window in the first approach.
 
-I also used AI to pressure-test the SSRF design. The first version validated the resolved IP but let the HTTP client resolve DNS again at connect time, leaving a DNS rebinding window. I changed the implementation so the fetcher dials the exact validated address and revalidates every redirect hop before following it. I added tests that prove the pinned connection works and that redirects to unsafe targets are rejected.
+The final implementation dials the exact validated address and revalidates every redirect hop before following it. The tests prove both behaviors.
 
 ## Verification
 
@@ -87,22 +86,10 @@ Additional checks already performed:
 - `.env` is ignored and not tracked.
 - OpenAPI contract is included, and the load-test runner is in the public GitHub repo.
 
-## Final pre-submit checklist
+## Final packet contents
 
-- [x] Public GitHub repo exists.
-- [x] Live deployment works.
-- [x] README has API contract.
-- [x] Architecture document covers Task B.
-- [x] OpenAPI contract exists.
-- [x] Burst-test and coverage evidence exists in `PROOF.md`.
-- [x] Live proof document exists.
-- [x] Required footer credit exists on the live page.
-- [x] Local typecheck passes.
-- [x] Local tests pass.
-- [ ] Create Google Drive folder named `SDE_Chirag Khatri`.
-- [ ] Add a one-page links document to the Drive folder.
-- [ ] Add PDF copies of README and ARCHITECTURE as fallback artifacts.
-- [ ] Set Drive sharing to "anyone with the link can view".
-- [ ] Test the Drive link in an incognito window.
-- [ ] Follow `@realshreyanshsingh`.
-- [ ] Send the single Drive link by Instagram DM.
+- `README.md`: API contract and implementation notes.
+- `ARCHITECTURE.md`: full Task B architecture, technology decisions, failure analysis, observability and rollback.
+- `ARCHITECTURE.pdf`: Drive-visible architecture diagram.
+- `openapi.yaml`: machine-readable API contract.
+- `PROOF.md`: live checks, CI, coverage and burst-test evidence.

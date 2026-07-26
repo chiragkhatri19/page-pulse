@@ -1,4 +1,4 @@
-# Digital Heroes SDE Submission
+# Page Pulse SDE Submission
 
 Name: Chirag Khatri  
 Role: Software Development (SDE)
@@ -9,34 +9,33 @@ Role: Software Development (SDE)
 - GitHub repository: https://github.com/chiragkhatri19/page-pulse
 - Recommended first read: [SUBMISSION.md](./SUBMISSION.md)
 
-## What this is
+## The short version
 
-`pagepulse.run` is a production-minded URL audit service. It accepts a public URL, validates it, blocks unsafe network targets, fetches under strict timeouts, scores the page across SEO, accessibility, performance and security, and returns a structured JSON report.
+Page Pulse is a URL audit API built around the parts that usually get skipped in demo projects: hostile input, slow origins, cache stampedes, rate limits, useful errors and proof that the thing actually runs.
 
-The important part is not the scoring UI. The important part is the production behavior around it: SSRF defense, DNS-pinned fetching, bounded concurrency, per-host protection, cache dedupe, rate limiting, structured errors, request IDs, tests and CI.
+The scoring UI is there so the service is easy to try. The engineering work is in the request path: validate the URL, resolve and pin the target address, reject private networks, limit each client, collapse duplicate audits, cap outbound concurrency, fetch under deadlines, and return a structured report with a request ID.
 
 ## Fast review path
 
-1. Open the live service.
-2. Scan `https://example.com`.
-3. Scan it again and check that the second response is cached.
-4. Scan `http://169.254.169.254/latest/meta-data/` and confirm it returns `422 URL_NOT_ALLOWED`.
-5. Open [PROOF.md](./PROOF.md) for live verification, test coverage and burst-test evidence.
-6. Open [ARCHITECTURE.pdf](./ARCHITECTURE.pdf) for the architecture diagram in a Drive-visible document.
-7. Open [ARCHITECTURE.md](./ARCHITECTURE.md) for the full 10,000 audits/day and 500-concurrent-request design.
-8. Open [README.md](./README.md) for the API contract.
+1. Open the live service and scan `https://example.com`.
+2. Scan it again. The second response should come back as a cache hit.
+3. Scan `http://169.254.169.254/latest/meta-data/`. It should return `422 URL_NOT_ALLOWED`.
+4. Open [PROOF.md](./PROOF.md) for live verification, test coverage and burst-test evidence.
+5. Open [ARCHITECTURE.pdf](./ARCHITECTURE.pdf) for the architecture diagram in a Drive-visible document.
+6. Open [ARCHITECTURE.md](./ARCHITECTURE.md) for the full 10,000 audits/day and 500-concurrent-request design.
+7. Open [README.md](./README.md) for the API contract.
 
-## What to notice
+## What I would ask about in an interview
 
-- The implementation treats URL auditing as an SSRF risk, not just an HTTP request.
-- The cache has single-flight behavior so repeated cold requests do not stampede the origin.
-- One slow hostname cannot consume the whole audit pool because global and per-host limits are separate.
-- The scale document starts with the traffic math and designs around burst shape plus third-party latency.
-- The tests assert behavior, including origin hit counts, redirect revalidation, rate-limit headers, cache hits and structured error contracts.
+- Why the fetcher dials the DNS-validated IP instead of letting the HTTP client resolve again.
+- Why a target site's `500` is a successful audit, while a Page Pulse `500` is an outage.
+- Why the scale design converts slow cache misses to async jobs instead of pretending third-party latency is under our control.
+- Why the cache and rate limiter are in process for the submitted build, but move to Redis in the scale design.
+- How the test suite proves behavior rather than only testing helper functions.
 
 ## AI usage
 
-AI tools were used as an implementation accelerator and reviewer. The architectural decisions, tradeoffs and final implementation choices are documented in [SUBMISSION.md](./SUBMISSION.md), including where early drafts were rejected and tightened.
+AI tools were used as an implementation accelerator and reviewer. The final choices are mine, and [SUBMISSION.md](./SUBMISSION.md) calls out the places where AI helped pressure-test the design, especially the DNS rebinding gap in the first SSRF approach.
 
 ## Required footer
 

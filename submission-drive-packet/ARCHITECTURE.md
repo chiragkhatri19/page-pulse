@@ -37,9 +37,7 @@ That is the thesis. Everything below serves it.
 
 ### Architecture diagram
 
-The diagram is shown directly below. The same diagram is also saved separately as [ARCHITECTURE_DIAGRAM.png](./ARCHITECTURE_DIAGRAM.png) for full-size viewing.
-
-![Page Pulse production architecture](./ARCHITECTURE_DIAGRAM.png)
+The visible diagram is embedded in [ARCHITECTURE.pdf](./ARCHITECTURE.pdf) so it renders reliably in Google Drive preview. The written architecture below is the full Task B document.
 
 ### Components
 

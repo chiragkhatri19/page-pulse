@@ -1,6 +1,6 @@
 # pagepulse.run
 
-A production-minded URL audit service. Give it a public URL, it fetches the page under strict timeouts, reads the markup and response headers, and returns a scored JSON report across four pillars: SEO, accessibility, performance and security.
+A production-minded URL audit service. Give it a public URL, and it returns a scored report across SEO, accessibility, performance and security. The interesting part is the guardrail work around that fetch: URL validation, SSRF defense, DNS pinning, bounded concurrency, cache dedupe, rate limiting, structured errors and request IDs.
 
 Live: **https://page-pulse-9riw.onrender.com**
 CI: ![CI](https://github.com/chiragkhatri19/page-pulse/actions/workflows/ci.yml/badge.svg)
