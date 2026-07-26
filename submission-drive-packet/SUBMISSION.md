@@ -9,6 +9,7 @@ Role: Software Development (SDE). Task A and Task B.
 - Evaluator guide: [EVALUATOR_GUIDE.md](./EVALUATOR_GUIDE.md)
 - API contract: [README.md](./README.md)
 - Architecture document: [ARCHITECTURE.md](./ARCHITECTURE.md)
+- Standalone Mermaid diagram: [ARCHITECTURE_DIAGRAM.mmd](./ARCHITECTURE_DIAGRAM.mmd)
 - OpenAPI contract: [openapi.yaml](./openapi.yaml)
 - Load-test evidence: [LOAD_TEST.md](./LOAD_TEST.md)
 - Verification proof: [PROOF.md](./PROOF.md)
