@@ -37,9 +37,102 @@ That is the thesis. Everything below serves it.
 
 ### Architecture diagram
 
-The diagram is included as a visible SVG so it previews in GitHub, Drive and common file viewers. It is intentionally sparse: the architecture details live in the sections below, while the diagram gives a reviewer the system shape in one pass.
+The diagram is embedded directly here so the architecture document stands on its own. The same diagram is also saved separately as [ARCHITECTURE_DIAGRAM.svg](./ARCHITECTURE_DIAGRAM.svg) for Drive preview and full-size viewing.
 
-![pagepulse.run scale architecture](./ARCHITECTURE_DIAGRAM.svg)
+<svg xmlns="http://www.w3.org/2000/svg" width="980" height="620" viewBox="0 0 980 620" role="img" aria-label="Page Pulse production architecture">
+  <defs>
+    <style>
+      .pp-bg{fill:#f7f3ea}.pp-card{fill:#fffdf6;stroke:#24312a;stroke-width:1.5}.pp-state{fill:#ecf6ef}.pp-risk{fill:#fff0df}.pp-obs{fill:#edf2ff}.pp-title{font:700 28px Inter,Arial,sans-serif;fill:#16221c}.pp-sub{font:500 14px Inter,Arial,sans-serif;fill:#53645a}.pp-label{font:800 16px Inter,Arial,sans-serif;fill:#16221c}.pp-small{font:500 12px Inter,Arial,sans-serif;fill:#46564d}.pp-line{fill:none;stroke:#2f3a34;stroke-width:2;marker-end:url(#pp-arrow)}.pp-dash{fill:none;stroke:#67756c;stroke-width:1.5;stroke-dasharray:6 7;marker-end:url(#pp-arrow)}
+    </style>
+    <marker id="pp-arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+      <path d="M1 1 L9 5 L1 9 Z" fill="#2f3a34"/>
+    </marker>
+  </defs>
+  <rect class="pp-bg" width="980" height="620" rx="24"/>
+  <text x="38" y="54" class="pp-title">Page Pulse production architecture</text>
+  <text x="40" y="82" class="pp-sub">Fast cache hits stay synchronous. Slow third-party origins become queued work before they break the SLA.</text>
+
+  <g transform="translate(38 126)">
+    <rect class="pp-card" width="118" height="86" rx="14"/>
+    <text x="18" y="34" class="pp-label">Client</text>
+    <text x="18" y="58" class="pp-small">Browser or API</text>
+  </g>
+  <g transform="translate(190 126)">
+    <rect class="pp-card pp-risk" width="134" height="86" rx="14"/>
+    <text x="18" y="34" class="pp-label">Edge</text>
+    <text x="18" y="58" class="pp-small">WAF, IP limits</text>
+  </g>
+  <g transform="translate(366 106)">
+    <rect class="pp-card" width="176" height="126" rx="16"/>
+    <text x="20" y="34" class="pp-label">API replicas</text>
+    <text x="20" y="60" class="pp-small">Validation, SSRF guard</text>
+    <text x="20" y="82" class="pp-small">rate limit, cache lookup</text>
+    <text x="20" y="104" class="pp-small">5 second sync deadline</text>
+  </g>
+  <g transform="translate(584 106)">
+    <rect class="pp-card pp-state" width="164" height="126" rx="16"/>
+    <text x="20" y="34" class="pp-label">Redis</text>
+    <text x="20" y="60" class="pp-small">Report cache + TTL</text>
+    <text x="20" y="82" class="pp-small">token buckets</text>
+    <text x="20" y="104" class="pp-small">single-flight locks</text>
+  </g>
+  <g transform="translate(790 106)">
+    <rect class="pp-card pp-risk" width="150" height="126" rx="16"/>
+    <text x="20" y="34" class="pp-label">Target sites</text>
+    <text x="20" y="60" class="pp-small">DNS-pinned fetch</text>
+    <text x="20" y="82" class="pp-small">host bulkheads</text>
+    <text x="20" y="104" class="pp-small">circuit breaker</text>
+  </g>
+
+  <path class="pp-line" d="M156 169 H190"/>
+  <path class="pp-line" d="M324 169 H366"/>
+  <path class="pp-line" d="M542 169 H584"/>
+  <path class="pp-line" d="M748 169 H790"/>
+
+  <g transform="translate(366 304)">
+    <rect class="pp-card pp-state" width="176" height="104" rx="16"/>
+    <text x="20" y="34" class="pp-label">Queue lanes</text>
+    <text x="20" y="60" class="pp-small">interactive, scheduled, bulk</text>
+    <text x="20" y="82" class="pp-small">bounded backlog + DLQ</text>
+  </g>
+  <g transform="translate(584 304)">
+    <rect class="pp-card" width="164" height="104" rx="16"/>
+    <text x="20" y="34" class="pp-label">Workers</text>
+    <text x="20" y="60" class="pp-small">same audit core</text>
+    <text x="20" y="82" class="pp-small">retries and webhooks</text>
+  </g>
+  <g transform="translate(790 304)">
+    <rect class="pp-card pp-state" width="150" height="104" rx="16"/>
+    <text x="20" y="34" class="pp-label">Postgres</text>
+    <text x="20" y="60" class="pp-small">history, API keys</text>
+    <text x="20" y="82" class="pp-small">usage records</text>
+  </g>
+
+  <path class="pp-line" d="M454 232 V304"/>
+  <path class="pp-line" d="M542 356 H584"/>
+  <path class="pp-line" d="M748 356 H790"/>
+  <path class="pp-line" d="M666 304 V232"/>
+
+  <g transform="translate(38 480)">
+    <rect class="pp-card pp-obs" width="260" height="82" rx="16"/>
+    <text x="18" y="32" class="pp-label">Observability</text>
+    <text x="18" y="58" class="pp-small">SLA, queue age, Redis, SSRF alerts</text>
+  </g>
+  <g transform="translate(360 480)">
+    <rect class="pp-card pp-risk" width="260" height="82" rx="16"/>
+    <text x="18" y="32" class="pp-label">SLA policy</text>
+    <text x="18" y="58" class="pp-small">cache hit p99 &lt; 150 ms, slow origin 202</text>
+  </g>
+  <g transform="translate(682 480)">
+    <rect class="pp-card" width="258" height="82" rx="16"/>
+    <text x="18" y="32" class="pp-label">Rollback</text>
+    <text x="18" y="58" class="pp-small">canary deploy, immutable image tags</text>
+  </g>
+
+  <path class="pp-dash" d="M454 232 C350 320 230 390 168 480"/>
+  <path class="pp-dash" d="M454 232 C468 322 480 400 490 480"/>
+  <path class="pp-dash" d="M666 232 C710 330 766 410 811 480"/>
+</svg>
 
 ### Components
 
