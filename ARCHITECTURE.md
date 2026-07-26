@@ -37,9 +37,9 @@ That is the thesis. Everything below serves it.
 
 ### Architecture diagram
 
-The diagram is shown directly below. The same diagram is also saved separately as [ARCHITECTURE_DIAGRAM.svg](./ARCHITECTURE_DIAGRAM.svg) for full-size viewing.
+The diagram is shown directly below. The same diagram is also saved separately as [ARCHITECTURE_DIAGRAM.png](./ARCHITECTURE_DIAGRAM.png) for full-size viewing.
 
-![Page Pulse production architecture](./ARCHITECTURE_DIAGRAM.svg)
+![Page Pulse production architecture](./ARCHITECTURE_DIAGRAM.png)
 
 ### Components
 
